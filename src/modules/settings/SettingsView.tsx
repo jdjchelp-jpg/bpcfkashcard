@@ -1,12 +1,14 @@
 import { useStore } from '@/context/StoreContext';
 import { themes } from '@/utils/themes';
-import { Check, CreditCard, Key, Palette, Shield, Mail, User, Lock, Crown, Zap } from 'lucide-react';
+import { Check, CreditCard, Key, Palette, Shield, Mail, User, Lock, Crown, Zap, Cpu } from 'lucide-react';
 
 export function SettingsView() {
     const {
         openRouterKey, setOpenRouterKey,
         poeKey, setPoeKey,
         preferredProvider, setPreferredProvider,
+        openRouterModel, setOpenRouterModel,
+        poeModel, setPoeModel,
         currentTheme, setTheme,
         isPaid, setIsPaid, maxUploadSize
     } = useStore();
@@ -16,6 +18,20 @@ export function SettingsView() {
         'simonejohnson840@gmail.com',
         'jdjchelp@gmail.com',
         'simonejohnson840+anything@gmail.com'
+    ];
+
+    const orModels = [
+        { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B (Video/Text)' },
+        { id: 'arcee-ai/trinity-large-preview:free', name: 'Trinity Large Preview' },
+        { id: 'upstage/solar-pro-3:free', name: 'Solar Pro 3' },
+        { id: 'nvidia/nemotron-3-nano-30b-a3b:free', name: 'Nemotron 3 Nano 30B' },
+        { id: 'arcee-ai/trinity-mini:free', name: 'Trinity Mini' },
+        { id: 'qwen/qwen3-next-80b-a3b-instruct:free', name: 'Qwen 3 Next 80B' },
+        { id: 'qwen/qwen3-coder:free', name: 'Qwen 3 Coder' }
+    ];
+
+    const poeModels = [
+        { id: 'grok-4-fast-reasoning', name: 'Grok 4 Fast Reasoning' }
     ];
 
     const limitInMB = maxUploadSize / (1024 * 1024);
@@ -35,12 +51,13 @@ export function SettingsView() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* OpenRouter Key */}
-                    <div className={`bg-bgSurface border rounded-2xl p-6 shadow-sm transition-all ${preferredProvider === 'openrouter' ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-700/50'}`}>
-                        <div className="flex items-center justify-between mb-4">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                OpenRouter API Key
-                            </label>
+                    {/* OpenRouter Config */}
+                    <div className={`bg-bgSurface border rounded-2xl p-6 shadow-sm transition-all flex flex-col gap-4 ${preferredProvider === 'openrouter' ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-700/50'}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Cpu size={18} className="text-primary" />
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">OpenRouter</label>
+                            </div>
                             <input
                                 type="radio"
                                 checked={preferredProvider === 'openrouter'}
@@ -49,30 +66,47 @@ export function SettingsView() {
                                 name="preferredProvider"
                             />
                         </div>
-                        <div className="relative">
-                            <input
-                                type="password"
-                                value={openRouterKey}
-                                onChange={(e) => setOpenRouterKey(e.target.value)}
-                                placeholder="sk-or-..."
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all pr-24"
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                {openRouterKey ? (
-                                    <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-1 rounded-full font-medium border border-green-500/20 uppercase tracking-tighter">Active</span>
-                                ) : (
-                                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full font-medium uppercase tracking-tighter">Missing</span>
-                                )}
+
+                        <div className="space-y-4">
+                            <div className="relative">
+                                <input
+                                    type="password"
+                                    value={openRouterKey}
+                                    onChange={(e) => setOpenRouterKey(e.target.value)}
+                                    placeholder="sk-or-..."
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all pr-20"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {openRouterKey ? (
+                                        <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-1 rounded-full font-bold uppercase tracking-tighter">Active</span>
+                                    ) : (
+                                        <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full font-bold uppercase tracking-tighter">Missing</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Selected Model</label>
+                                <select
+                                    value={openRouterModel}
+                                    onChange={(e) => setOpenRouterModel(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
+                                >
+                                    {orModels.map(m => (
+                                        <option key={m.id} value={m.id}>{m.name}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     </div>
 
-                    {/* Poe Key */}
-                    <div className={`bg-bgSurface border rounded-2xl p-6 shadow-sm transition-all ${preferredProvider === 'poe' ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-700/50'}`}>
-                        <div className="flex items-center justify-between mb-4">
-                            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Poe API Key
-                            </label>
+                    {/* Poe Config */}
+                    <div className={`bg-bgSurface border rounded-2xl p-6 shadow-sm transition-all flex flex-col gap-4 ${preferredProvider === 'poe' ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-700/50'}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Cpu size={18} className="text-secondary" />
+                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Poe</label>
+                            </div>
                             <input
                                 type="radio"
                                 checked={preferredProvider === 'poe'}
@@ -81,27 +115,44 @@ export function SettingsView() {
                                 name="preferredProvider"
                             />
                         </div>
-                        <div className="relative">
-                            <input
-                                type="password"
-                                value={poeKey}
-                                onChange={(e) => setPoeKey(e.target.value)}
-                                placeholder="p-..."
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl p-4 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all pr-24"
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                {poeKey ? (
-                                    <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-1 rounded-full font-medium border border-green-500/20 uppercase tracking-tighter">Active</span>
-                                ) : (
-                                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full font-medium uppercase tracking-tighter">Missing</span>
-                                )}
+
+                        <div className="space-y-4">
+                            <div className="relative">
+                                <input
+                                    type="password"
+                                    value={poeKey}
+                                    onChange={(e) => setPoeKey(e.target.value)}
+                                    placeholder="p-..."
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono transition-all pr-20"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {poeKey ? (
+                                        <span className="text-[10px] bg-green-500/10 text-green-600 px-2 py-1 rounded-full font-bold uppercase tracking-tighter">Active</span>
+                                    ) : (
+                                        <span className="text-[10px] bg-slate-200 dark:bg-slate-800 text-slate-500 px-2 py-1 rounded-full font-bold uppercase tracking-tighter">Missing</span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Selected Model</label>
+                                <select
+                                    value={poeModel}
+                                    onChange={(e) => setPoeModel(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-not-allowed opacity-80"
+                                    disabled
+                                >
+                                    {poeModels.map(m => (
+                                        <option key={m.id} value={m.id}>{m.name}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <p className="text-xs text-slate-500 flex items-center gap-2 px-2">
-                    <Shield size={12} /> Your keys are stored locally in your browser and never sent to our servers.
+                    <Shield size={12} /> Your credentials are encrypted and stored solely in your local browser sandbox.
                 </p>
             </section>
 

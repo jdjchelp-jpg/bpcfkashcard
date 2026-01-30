@@ -16,6 +16,10 @@ interface StoreContextType {
     setPoeKey: (key: string) => void;
     preferredProvider: AIProvider;
     setPreferredProvider: (provider: AIProvider) => void;
+    openRouterModel: string;
+    setOpenRouterModel: (model: string) => void;
+    poeModel: string;
+    setPoeModel: (model: string) => void;
     flashcards: FlashcardData[];
     setFlashcards: (cards: FlashcardData[]) => void;
     isGenerating: boolean;
@@ -34,6 +38,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const [poeKey, setPoeKeyState] = useState(() => localStorage.getItem('poeKey') || '');
     const [preferredProvider, setPreferredProviderState] = useState<AIProvider>(() =>
         (localStorage.getItem('preferredProvider') as AIProvider) || 'openrouter'
+    );
+
+    // Model States
+    const [openRouterModel, setOpenRouterModelState] = useState(() =>
+        localStorage.getItem('openRouterModel') || 'nvidia/nemotron-nano-12b-v2-vl:free'
+    );
+    const [poeModel, setPoeModelState] = useState(() =>
+        localStorage.getItem('poeModel') || 'grok-4-fast-reasoning'
     );
 
     const [flashcards, setFlashcards] = useState<FlashcardData[]>(() => {
@@ -70,6 +82,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const setPreferredProvider = (provider: AIProvider) => {
         setPreferredProviderState(provider);
         localStorage.setItem('preferredProvider', provider);
+    };
+
+    const setOpenRouterModel = (model: string) => {
+        setOpenRouterModelState(model);
+        localStorage.setItem('openRouterModel', model);
+    };
+
+    const setPoeModel = (model: string) => {
+        setPoeModelState(model);
+        localStorage.setItem('poeModel', model);
     };
 
     useEffect(() => {
@@ -124,6 +146,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             setPoeKey,
             preferredProvider,
             setPreferredProvider,
+            openRouterModel,
+            setOpenRouterModel,
+            poeModel,
+            setPoeModel,
             flashcards,
             setFlashcards,
             isGenerating,

@@ -9,6 +9,7 @@ import { parseFile } from '@/utils/fileParser';
 export function GeneratorView() {
     const {
         openRouterKey, poeKey, preferredProvider, setPreferredProvider,
+        openRouterModel, poeModel,
         setFlashcards, setIsGenerating, isGenerating, maxUploadSize
     } = useStore();
 
@@ -34,6 +35,7 @@ export function GeneratorView() {
 
     const handleCreate = async () => {
         const apiKey = preferredProvider === 'openrouter' ? openRouterKey : poeKey;
+        const model = preferredProvider === 'openrouter' ? openRouterModel : poeModel;
 
         if (!apiKey) {
             setError(`Please set your ${preferredProvider === 'openrouter' ? 'OpenRouter' : 'Poe'} API Key in Settings first.`);
@@ -58,6 +60,7 @@ export function GeneratorView() {
                 instruction,
                 content: sourceText.slice(0, 15000),
                 provider: preferredProvider,
+                model,
                 apiKey
             });
 
@@ -87,6 +90,10 @@ export function GeneratorView() {
         if (droppedFile) handleFileChange(droppedFile);
     };
 
+    const currentModelName = preferredProvider === 'openrouter'
+        ? openRouterModel.split('/').pop()?.split(':')[0]?.replace(/-/g, ' ') || openRouterModel
+        : poeModel.replace(/-/g, ' ');
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
             {/* Left Column: Inputs */}
@@ -106,6 +113,9 @@ export function GeneratorView() {
                     >
                         <Cpu size={14} /> Poe
                     </button>
+                    <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-lg text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
+                        Active: {currentModelName}
+                    </div>
                 </div>
 
                 {/* Instruction Box */}
