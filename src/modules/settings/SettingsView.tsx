@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { themes } from '@/utils/themes';
-import { Check, CreditCard, Key, Palette, Shield, Mail, User, Lock, Crown, Zap, Cpu } from 'lucide-react';
+import { Check, CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu, Unlock } from 'lucide-react';
 
 export function SettingsView() {
     const {
@@ -13,12 +14,19 @@ export function SettingsView() {
         isPaid, setIsPaid, maxUploadSize
     } = useStore();
 
-    const accounts = [
-        'reactcc@atomicmail.io',
-        'simonejohnson840@gmail.com',
-        'jdjchelp@gmail.com',
-        'simonejohnson840+anything@gmail.com'
-    ];
+    const [upgradeCode, setUpgradeCode] = useState('');
+    const [codeError, setCodeError] = useState(false);
+
+    const handleUpgrade = () => {
+        if (upgradeCode === '2121') {
+            setIsPaid(true);
+            setUpgradeCode('');
+            setCodeError(false);
+        } else {
+            setCodeError(true);
+            setTimeout(() => setCodeError(false), 2000);
+        }
+    };
 
     const orModels = [
         { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B (Video/Text)' },
@@ -40,7 +48,7 @@ export function SettingsView() {
         <div className="max-w-4xl mx-auto space-y-12 pb-20">
             <header>
                 <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Settings</h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">Manage your API keys, preferences, and themes.</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">Manage your AI keys, preferences, and themes.</p>
             </header>
 
             {/* AI Configuration Section */}
@@ -164,68 +172,62 @@ export function SettingsView() {
                 </div>
 
                 <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-8 shadow-sm">
-                    <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="flex-1 space-y-6">
-                            <div className="flex items-center gap-4">
-                                <h4 className="text-2xl font-bold text-slate-900 dark:text-white">Plan Status: {isPaid ? 'Pro' : 'Free'}</h4>
-                                {isPaid ? (
-                                    <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg shadow-yellow-500/20">
-                                        <Crown size={12} /> PRO
-                                    </span>
-                                ) : (
-                                    <button
-                                        onClick={() => setIsPaid(true)}
-                                        className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
-                                    >
-                                        <Zap size={12} /> Upgrade to Pro
-                                    </button>
-                                )}
-                            </div>
-
-                            <p className="text-slate-600 dark:text-slate-400">
-                                Enjoy higher upload limits and premium AI models. Current limit: <strong>{limitInMB}MB</strong>
-                            </p>
-
-                            {isPaid && (
-                                <button
-                                    onClick={() => setIsPaid(false)}
-                                    className="text-xs text-slate-400 hover:text-red-500 transition-colors"
-                                >
-                                    (Debug) Downgrade to Free
-                                </button>
-                            )}
-
-                            <div className="space-y-4">
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Contact Support:</p>
-                                <div className="flex items-center gap-3 p-4 bg-white/50 dark:bg-slate-900/50 rounded-xl border border-white dark:border-slate-800 shadow-inner">
-                                    <Mail className="text-primary" size={20} />
-                                    <a href="mailto:reactcc@atomicmail.io" className="font-semibold text-primary hover:underline">
-                                        reactcc@atomicmail.io
-                                    </a>
+                    <div className="max-w-2xl space-y-8">
+                        <div className="space-y-4">
+                            {isPaid ? (
+                                <div className="flex items-center gap-2 bg-yellow-500 text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-yellow-500/20 w-fit">
+                                    <Crown size={24} /> Professional Plan Active
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="w-full md:w-80 bg-bgSurface border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-xl relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-                                <User size={100} />
-                            </div>
-                            <div className="flex items-center gap-2 mb-4 text-slate-900 dark:text-white font-bold border-b border-slate-100 dark:border-slate-800 pb-2">
-                                <User size={18} className="text-secondary" />
-                                Connected Accounts
-                            </div>
-                            <div className="space-y-3 relative z-10">
-                                {accounts.map(acc => (
-                                    <div key={acc} className="text-[10px] py-2 px-3 bg-slate-50 dark:bg-slate-900/80 rounded-lg text-slate-600 dark:text-slate-400 font-mono break-all border border-slate-100 dark:border-slate-800 shadow-sm">
-                                        {acc}
+                            ) : (
+                                <div className="flex flex-col gap-4">
+                                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Upgrade to Pro</h4>
+                                    <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-2 rounded-2xl w-full max-w-md shadow-inner">
+                                        <input
+                                            type="text"
+                                            value={upgradeCode}
+                                            onChange={(e) => setUpgradeCode(e.target.value)}
+                                            placeholder="Enter Access Code"
+                                            className={`flex-1 bg-transparent px-4 py-2 text-base focus:outline-none font-bold placeholder:font-medium transition-colors ${codeError ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}
+                                        />
+                                        <button
+                                            onClick={handleUpgrade}
+                                            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 whitespace-nowrap"
+                                        >
+                                            <Zap size={16} /> Upgrade Now
+                                        </button>
                                     </div>
-                                ))}
-                                <div className="mt-4 flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <span className="flex items-center gap-1 text-slate-400"><Lock size={12} /> Password</span>
-                                    <span className="font-bold text-primary">011</span>
+                                    {codeError && <p className="text-xs font-bold text-red-500 uppercase tracking-widest ml-4 animate-bounce">Invalid code provided.</p>}
                                 </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="text-slate-700 dark:text-slate-200 text-lg font-medium">
+                                Enjoy higher upload limits and premium AI models.
+                            </p>
+                            <p className="text-slate-500 dark:text-slate-400">
+                                Current storage limit: <strong className="text-primary">{limitInMB}MB</strong>
+                            </p>
+                        </div>
+
+                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Contact Support:</p>
+                            <div className="flex items-center gap-3 p-4 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-white dark:border-slate-800 shadow-sm w-fit">
+                                <Mail className="text-primary" size={20} />
+                                <a href="mailto:reactcc@atomicmail.io" className="font-bold text-primary hover:underline text-lg">
+                                    reactcc@atomicmail.io
+                                </a>
                             </div>
                         </div>
+
+                        {isPaid && (
+                            <button
+                                onClick={() => setIsPaid(false)}
+                                className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+                            >
+                                (Debug) Disable Professional Access
+                            </button>
+                        )}
                     </div>
                 </div>
             </section>

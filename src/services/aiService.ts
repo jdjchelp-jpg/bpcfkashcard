@@ -27,8 +27,8 @@ Example: [{"front": "Question?", "back": "Answer."}]`;
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://flashcard-maker-pro.vercel.app",
-                "X-Title": "Flashcard AI Maker Pro",
+                "HTTP-Referer": "https://bpcfkashcard.vercel.app/",
+                "X-Title": "bpcFkashcard",
             },
             body: JSON.stringify({
                 model: model,
