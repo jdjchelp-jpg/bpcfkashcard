@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu } from 'lucide-react';
+import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flashcard } from '@/components/flashcard/Flashcard';
 import { useStore } from '@/context/StoreContext';
@@ -9,7 +9,7 @@ import { parseFile } from '@/utils/fileParser';
 export function GeneratorView() {
     const {
         openRouterKey, poeKey, preferredProvider, setPreferredProvider,
-        setFlashcards, setIsGenerating, isGenerating
+        setFlashcards, setIsGenerating, isGenerating, maxUploadSize
     } = useStore();
 
     const [instruction, setInstruction] = useState('');
@@ -18,6 +18,19 @@ export function GeneratorView() {
     const [activeInputMode, setActiveInputMode] = useState<'text' | 'file'>('text');
     const [error, setError] = useState<string | null>(null);
     const [generatedPreview, setGeneratedPreview] = useState<any[]>([]);
+
+    const handleFileChange = (newFile: File | null) => {
+        setError(null);
+        if (newFile) {
+            if (newFile.size > maxUploadSize) {
+                const limitMB = maxUploadSize / (1024 * 1024);
+                setError(`File is too large (${(newFile.size / (1024 * 1024)).toFixed(1)}MB). Your current limit is ${limitMB}MB.`);
+                setFile(null);
+                return;
+            }
+            setFile(newFile);
+        }
+    };
 
     const handleCreate = async () => {
         const apiKey = preferredProvider === 'openrouter' ? openRouterKey : poeKey;
@@ -71,7 +84,7 @@ export function GeneratorView() {
     const handleFileDrop = (e: React.DragEvent) => {
         e.preventDefault();
         const droppedFile = e.dataTransfer.files[0];
-        if (droppedFile) setFile(droppedFile);
+        if (droppedFile) handleFileChange(droppedFile);
     };
 
     return (
@@ -157,7 +170,7 @@ export function GeneratorView() {
                                 >
                                     <input
                                         type="file"
-                                        onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                        onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                                         className="absolute inset-0 opacity-0 cursor-pointer"
                                         accept=".txt,.md,.pdf,.docx"
                                     />
@@ -179,7 +192,7 @@ export function GeneratorView() {
                                                 <Upload size={32} className="text-secondary" />
                                             </div>
                                             <p className="font-medium text-lg text-slate-700 dark:text-slate-300">Click to upload or drag & drop</p>
-                                            <p className="text-sm mt-2 text-slate-500 max-w-xs text-center">Supported: .txt, .md, .pdf, .docx</p>
+                                            <p className="text-sm mt-2 text-slate-500 max-w-xs text-center">Max size: {maxUploadSize / (1024 * 1024)}MB</p>
                                         </>
                                     )}
                                 </motion.div>
@@ -191,7 +204,8 @@ export function GeneratorView() {
                 {/* Generate Button */}
                 <div className="space-y-2">
                     {error && (
-                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm text-center animate-pulse">
+                        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm flex items-center justify-center gap-2">
+                            <AlertCircle size={16} />
                             {error}
                         </div>
                     )}
