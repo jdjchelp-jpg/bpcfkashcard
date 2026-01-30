@@ -14,10 +14,18 @@ export interface GenerationParams {
 export async function generateCompletion({ instruction, content, provider, model, apiKey }: GenerationParams) {
     const url = provider === 'openrouter' ? OPENROUTER_URL : POE_URL;
 
-    const systemPrompt = `You are a professional flashcard generator. 
-Create high-quality flashcards based on the user's content and specific instructions.
+    const systemPrompt = `You are an expert educational psychologist and flashcard creator. 
+Your goal is to transform complex information into clear, effective flashcards following the Minimum Information Principle.
+
+RULES FOR FLASHCARD CREATION:
+1. **Conciseness**: Keep cards short. One concept per card.
+2. **Clarity**: Use simple language. Avoid ambiguity.
+3. **Bold Key Terms**: Use double asterisks **like this** to highlight the most important terms or answers in the back of the card.
+4. **Accuracy**: Ensure every card is factually correct based on the source material.
+5. **Formatting**: Use Markdown for newlines (\n\n) if explaining a multi-step process.
+
 Return ONLY a valid JSON array of objects with "front" and "back" keys.
-Example: [{"front": "Question?", "back": "Answer."}]`;
+Example: [{"front": "What is the powerhouse of the cell?", "back": "The **Mitochondria**."}]`;
 
     const userPrompt = `Instruction: ${instruction}\n\nContent: ${content}`;
 

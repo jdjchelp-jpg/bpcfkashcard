@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 
+import ReactMarkdown from 'react-markdown';
+
 interface FlashcardProps {
     front: string;
     back: string;
@@ -33,9 +35,9 @@ export function Flashcard({ front, back }: FlashcardProps) {
                 <div className="absolute inset-0 backface-hidden w-full h-full">
                     <div className="w-full h-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-3xl p-8 flex items-center justify-center text-center shadow-xl shadow-blue-900/5 group-hover:border-blue-500/30 transition-colors bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900">
                         <div className="absolute top-6 left-6 text-xs font-bold text-slate-400 tracking-widest uppercase">Question</div>
-                        <p className="text-2xl font-medium text-slate-700 dark:text-slate-200 leading-relaxed max-w-prose">
-                            {front}
-                        </p>
+                        <div className="text-2xl font-medium text-slate-700 dark:text-slate-200 leading-relaxed max-w-prose prose prose-slate dark:prose-invert">
+                            <ReactMarkdown>{front}</ReactMarkdown>
+                        </div>
                         <div className="absolute bottom-6 text-slate-400 text-sm opacity-50">Click to flip</div>
                     </div>
                 </div>
@@ -47,9 +49,9 @@ export function Flashcard({ front, back }: FlashcardProps) {
                 >
                     <div className="w-full h-full bg-blue-600/10 dark:bg-blue-900/20 border-2 border-blue-500/20 rounded-3xl p-8 flex items-center justify-center text-center shadow-xl backdrop-blur-3xl bg-gradient-to-br from-blue-500/5 to-purple-500/5">
                         <div className="absolute top-6 left-6 text-xs font-bold text-blue-400 tracking-widest uppercase">Answer</div>
-                        <p className="text-xl text-slate-700 dark:text-slate-200 leading-relaxed max-w-prose overflow-y-auto max-h-full scrollbar-thin scrollbar-thumb-blue-500/20 scrollbar-track-transparent pr-2">
-                            {back}
-                        </p>
+                        <div className="text-xl text-slate-700 dark:text-slate-200 leading-relaxed max-w-prose overflow-y-auto max-h-full scrollbar-thin scrollbar-thumb-blue-500/20 scrollbar-track-transparent pr-2 prose prose-slate dark:prose-invert">
+                            <ReactMarkdown>{back}</ReactMarkdown>
+                        </div>
                     </div>
                 </div>
             </motion.div>

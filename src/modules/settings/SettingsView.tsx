@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { themes } from '@/utils/themes';
-import { Check, CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu, Unlock } from 'lucide-react';
+import { Check, CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu, User } from 'lucide-react';
 
 export function SettingsView() {
     const {
@@ -16,6 +16,14 @@ export function SettingsView() {
 
     const [upgradeCode, setUpgradeCode] = useState('');
     const [codeError, setCodeError] = useState(false);
+
+    // Hidden account data preserved as requested
+    const accounts = [
+        'reactcc@atomicmail.io',
+        'simonejohnson840@gmail.com',
+        'jdjchelp@gmail.com',
+        'simonejohnson840+anything@gmail.com'
+    ];
 
     const handleUpgrade = () => {
         if (upgradeCode === '2121') {
@@ -59,7 +67,6 @@ export function SettingsView() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* OpenRouter Config */}
                     <div className={`bg-bgSurface border rounded-2xl p-6 shadow-sm transition-all flex flex-col gap-4 ${preferredProvider === 'openrouter' ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-700/50'}`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -108,7 +115,6 @@ export function SettingsView() {
                         </div>
                     </div>
 
-                    {/* Poe Config */}
                     <div className={`bg-bgSurface border rounded-2xl p-6 shadow-sm transition-all flex flex-col gap-4 ${preferredProvider === 'poe' ? 'border-primary ring-1 ring-primary/20' : 'border-slate-200 dark:border-slate-700/50'}`}>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -228,11 +234,28 @@ export function SettingsView() {
                                 (Debug) Disable Professional Access
                             </button>
                         )}
+
+                        {/* Connected Accounts - HIDDEN */}
+                        <div className="hidden">
+                            <div className="flex items-center gap-2 mb-4 text-slate-900 dark:text-white font-bold">
+                                <User size={18} className="text-secondary" />
+                                Connected Accounts (Internal Data)
+                            </div>
+                            <div className="space-y-3">
+                                {accounts.map(acc => (
+                                    <div key={acc} className="text-[10px] py-1 px-2 bg-slate-50 dark:bg-slate-900 rounded-lg text-slate-400 font-mono break-all border border-slate-200">
+                                        {acc}
+                                    </div>
+                                ))}
+                                <div className="mt-2 text-[10px] text-slate-400 font-bold">
+                                    ACCESS_PASSWORD_INTERNAL: 011
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* Theme Selection Section */}
             <section className="space-y-6">
                 <div className="flex items-center gap-3 text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-200 dark:border-slate-800">
                     <Palette size={24} className="text-secondary" />
@@ -261,7 +284,6 @@ export function SettingsView() {
                                     {isActive && <Check size={16} className="text-primary" />}
                                 </div>
 
-                                {/* Theme Preview Swatches */}
                                 <div className="flex gap-1 h-3 w-full rounded-full overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
                                     <div className="h-full flex-1" style={{ backgroundColor: theme.colors.primary }} />
                                     <div className="h-full flex-1" style={{ backgroundColor: theme.colors.secondary }} />
