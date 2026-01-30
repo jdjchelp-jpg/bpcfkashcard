@@ -1,39 +1,61 @@
-import OpenAI from 'openai';
+import { AIProvider } from "@/context/StoreContext";
 
-// This service will act as a wrapper for OpenRouter or Poe
-// For now, we will structure it to expect an API Key from the user (via settings)
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const POE_URL = "https://api.poe.com/v1/chat/completions"; // Assuming standard OpenAI-compatible Poe API if available, else custom logic
 
-export interface AICompletionRequest {
-    systemPrompt: string;
-    userPrompt: string;
+export interface GenerationParams {
+    instruction: string;
+    content: string;
+    provider: AIProvider;
     apiKey: string;
-    baseUrl?: string;
-    model?: string;
 }
 
-export const generateCompletion = async ({
-    systemPrompt,
-    userPrompt,
-    apiKey,
-    baseUrl = "https://openrouter.ai/api/v1",
-    model = "openai/gpt-3.5-turbo"
-}: AICompletionRequest): Promise<string> => {
-    if (!apiKey) throw new Error("API Key is required");
+export async function generateCompletion({ instruction, content, provider, apiKey }: GenerationParams) {
+    const url = provider === 'openrouter' ? OPENROUTER_URL : POE_URL;
 
-    // OpenAI Library can work with OpenRouter if baseUrl is set
-    const client = new OpenAI({
-        apiKey: apiKey,
-        baseURL: baseUrl,
-        dangerouslyAllowBrowser: true // Running in browser for this app
-    });
+    const systemPrompt = `You are a professional flashcard generator. 
+Create high-quality flashcards based on the user's content and specific instructions.
+Return ONLY a valid JSON array of objects with "front" and "back" keys.
+Example: [{"front": "Question?", "back": "Answer."}]`;
 
-    const completion = await client.chat.completions.create({
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt }
-        ],
-        model: model,
-    });
+    const userPrompt = `Instruction: ${instruction}\n\nContent: ${content}`;
 
-    return completion.choices[0].message.content || "";
-};
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${apiKey}`,
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://flashcard-maker-pro.vercel.app", // Optional for OpenRouter
+                "X-Title": "Flashcard AI Maker",
+            },
+            body: JSON.stringify({
+                model: provider === 'openrouter' ? "google/gemini-2.0-flash-exp:free" : "default", // Adjusted for Poe if needed
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt },
+                ],
+                response_format: { type: "json_object" }
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const result = data.choices[0].message.content;
+
+        // Handle potential extra formatting from AI
+        const jsonMatch = result.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+
+        return JSON.parse(result);
+    } catch (error: any) {
+        console.error("AI Generation failed:", error);
+        throw error;
+    }
+}

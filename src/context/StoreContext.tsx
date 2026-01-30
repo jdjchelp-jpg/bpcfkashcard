@@ -7,26 +7,49 @@ export interface FlashcardData {
     back: string;
 }
 
+export type AIProvider = 'openrouter' | 'poe';
+
 interface StoreContextType {
-    apiKey: string;
-    setApiKey: (key: string) => void;
+    openRouterKey: string;
+    setOpenRouterKey: (key: string) => void;
+    poeKey: string;
+    setPoeKey: (key: string) => void;
+    preferredProvider: AIProvider;
+    setPreferredProvider: (provider: AIProvider) => void;
     flashcards: FlashcardData[];
     setFlashcards: (cards: FlashcardData[]) => void;
     isGenerating: boolean;
     setIsGenerating: (isGenerating: boolean) => void;
     currentTheme: Theme;
     setTheme: (themeId: string) => void;
+    isPaid: boolean;
+    setIsPaid: (isPaid: boolean) => void;
+    maxUploadSize: number; // in bytes
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-    const [apiKey, setApiKey] = useState(() => localStorage.getItem('apiKey') || '');
+    const [openRouterKey, setOpenRouterKeyState] = useState(() => localStorage.getItem('openRouterKey') || '');
+    const [poeKey, setPoeKeyState] = useState(() => localStorage.getItem('poeKey') || '');
+    const [preferredProvider, setPreferredProviderState] = useState<AIProvider>(() =>
+        (localStorage.getItem('preferredProvider') as AIProvider) || 'openrouter'
+    );
+
     const [flashcards, setFlashcards] = useState<FlashcardData[]>(() => {
         const saved = localStorage.getItem('flashcards');
         return saved ? JSON.parse(saved) : [];
     });
     const [isGenerating, setIsGenerating] = useState(false);
+
+    // Pro Status State
+    const [isPaid, setIsPaidState] = useState(() => localStorage.getItem('isPaid') === 'true');
+    const maxUploadSize = isPaid ? 500 * 1024 * 1024 : 250 * 1024 * 1024;
+
+    const setIsPaid = (val: boolean) => {
+        setIsPaidState(val);
+        localStorage.setItem('isPaid', String(val));
+    };
 
     // Theme State
     const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
@@ -34,9 +57,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return themes.find(t => t.id === savedThemeId) || themes.find(t => t.id === 'classic') || themes[0];
     });
 
-    useEffect(() => {
-        localStorage.setItem('apiKey', apiKey);
-    }, [apiKey]);
+    const setOpenRouterKey = (key: string) => {
+        setOpenRouterKeyState(key);
+        localStorage.setItem('openRouterKey', key);
+    };
+
+    const setPoeKey = (key: string) => {
+        setPoeKeyState(key);
+        localStorage.setItem('poeKey', key);
+    };
+
+    const setPreferredProvider = (provider: AIProvider) => {
+        setPreferredProviderState(provider);
+        localStorage.setItem('preferredProvider', provider);
+    };
 
     useEffect(() => {
         localStorage.setItem('flashcards', JSON.stringify(flashcards));
@@ -66,8 +100,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         localStorage.setItem('themeId', currentTheme.id);
 
-        // Handle "Dark" class for any other utility/library that specifically looks for .dark
-        // We assume themes with dark backgrounds are "dark"
         const isDarkTheme = ['dark', 'matrix', 'cyberpunk', 'midnight-depth', 'royal-velvet', 'volcanic-ash', 'vaporwave', 'dracula', 'monokai'].includes(currentTheme.id);
         if (isDarkTheme) {
             document.documentElement.classList.add('dark');
@@ -86,14 +118,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return (
         <StoreContext.Provider value={{
-            apiKey,
-            setApiKey,
+            openRouterKey,
+            setOpenRouterKey,
+            poeKey,
+            setPoeKey,
+            preferredProvider,
+            setPreferredProvider,
             flashcards,
             setFlashcards,
             isGenerating,
             setIsGenerating,
             currentTheme,
-            setTheme
+            setTheme,
+            isPaid,
+            setIsPaid,
+            maxUploadSize
         }}>
             {children}
         </StoreContext.Provider>
