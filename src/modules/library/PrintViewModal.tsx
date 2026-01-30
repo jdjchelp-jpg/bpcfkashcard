@@ -13,6 +13,7 @@ export function PrintViewModal({ onClose }: PrintViewModalProps) {
     const componentRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
+        // @ts-ignore
         content: () => componentRef.current,
         documentTitle: 'Flashcards-Print',
     });

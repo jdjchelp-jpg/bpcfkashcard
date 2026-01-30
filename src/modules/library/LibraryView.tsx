@@ -7,7 +7,7 @@ import { exportToExcel, exportToPDF, exportToWord } from '@/utils/exportUtils';
 import { PrintViewModal } from './PrintViewModal';
 
 export function LibraryView() {
-    const { flashcards, setFlashcards, currentTheme } = useStore();
+    const { flashcards, setFlashcards } = useStore();
     const [editingCardId, setEditingCardId] = useState<string | null>(null);
     const [editFront, setEditFront] = useState('');
     const [editBack, setEditBack] = useState('');

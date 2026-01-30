@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Sparkles, BookOpen, Settings, Video } from 'lucide-react';
-import { useStore } from '@/context/StoreContext';
+
 
 interface SidebarProps {
     activeTab: 'create' | 'library' | 'video' | 'settings';
