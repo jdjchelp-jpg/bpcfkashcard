@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Sparkles, BookOpen, Settings, Video } from 'lucide-react';
-
+import { Sparkles, BookOpen, Settings, Video, Crown } from 'lucide-react';
+import { useStore } from '@/context/StoreContext';
 
 interface SidebarProps {
     activeTab: 'create' | 'library' | 'video' | 'settings';
@@ -8,8 +8,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
-    // We don't need isDark toggle here anymore as it's part of themes in Settings
-    // But we could show a mini theme indicator if we wanted.
+    const { isPaid } = useStore();
 
     const navItems = [
         { id: 'create', icon: Sparkles, label: 'Create' },
@@ -19,12 +18,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     ] as const;
 
     return (
-        <div className="w-20 lg:w-64 border-r border-slate-200 dark:border-slate-800 bg-bgSurface dark:bg-slate-900 flex flex-col h-full transition-all duration-300 z-20 relative">
+        <div className="w-20 lg:w-64 border-r border-slate-200 dark:border-slate-800 bg-bgSurface/40 dark:bg-slate-900/40 backdrop-blur-3xl flex flex-col h-full transition-all duration-300 z-20 relative">
             <div className="p-6 flex items-center justify-center lg:justify-start gap-3 mb-6">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/30">
                     <Sparkles className="text-white" size={18} />
                 </div>
-                <h1 className="hidden lg:block font-bold text-xl tracking-tight bg-gradient-to-r from-slate-900 to-slate-500 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+                <h1 className="hidden lg:block font-extrabold text-xl tracking-tighter bg-gradient-to-r from-slate-900 via-primary to-slate-500 dark:from-white dark:via-primary dark:to-slate-400 bg-clip-text text-transparent">
                     Flash.AI
                 </h1>
             </div>
@@ -36,7 +35,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                         onClick={() => onTabChange(item.id)}
                         className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 relative group
                   ${activeTab === item.id
-                                ? 'text-primary bg-primary/10 font-semibold'
+                                ? 'text-primary bg-primary/10 font-bold'
                                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }
                `}
@@ -48,12 +47,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                             />
                         )}
                         <item.icon size={22} className={activeTab === item.id ? 'text-primary' : ''} />
-                        <span className="hidden lg:block">{item.label}</span>
+                        <span className="hidden lg:block uppercase text-xs tracking-widest">{item.label}</span>
 
                         {activeTab === item.id && (
                             <motion.div
                                 layoutId="activeIndicator"
-                                className="absolute left-0 w-1 h-8 bg-primary rounded-full hidden lg:block"
+                                className="absolute left-0 w-1.5 h-6 bg-primary rounded-full hidden lg:block"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                             />
@@ -63,14 +62,28 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             </nav>
 
             <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-                <div className="p-4 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 shadow-xl overflow-hidden relative group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Sparkles size={60} />
+                {isPaid ? (
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg relative overflow-hidden group">
+                        <div className="absolute -top-2 -right-2 opacity-20 transform rotate-12 group-hover:scale-110 transition-transform">
+                            <Crown size={60} />
+                        </div>
+                        <p className="text-[10px] font-black text-white/80 uppercase tracking-widest mb-1">Status</p>
+                        <p className="text-white font-black text-sm uppercase tracking-tighter">Pro Member</p>
                     </div>
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-1">Pro Plan</p>
-                    <p className="text-white font-bold text-sm">Upgrade for unlimited generation</p>
-                </div>
+                ) : (
+                    <button
+                        onClick={() => onTabChange('settings')}
+                        className="w-full p-4 rounded-xl bg-slate-900 border border-slate-800 shadow-xl overflow-hidden relative group text-left"
+                    >
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Sparkles size={60} />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Free Tier</p>
+                        <p className="text-white font-bold text-sm leading-tight">Upgrade to Pro Access</p>
+                    </button>
+                )}
             </div>
         </div>
     );
 }
+

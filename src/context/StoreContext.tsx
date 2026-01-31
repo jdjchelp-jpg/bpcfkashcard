@@ -94,6 +94,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('poeModel', model);
     };
 
+    // Unified Persistence Effect
+    useEffect(() => {
+        localStorage.setItem('preferredProvider', preferredProvider);
+        localStorage.setItem('openRouterModel', openRouterModel);
+        localStorage.setItem('poeModel', poeModel);
+    }, [preferredProvider, openRouterModel, poeModel]);
+
     useEffect(() => {
         localStorage.setItem('flashcards', JSON.stringify(flashcards));
     }, [flashcards]);

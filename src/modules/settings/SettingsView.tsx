@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { themes } from '@/utils/themes';
-import { Check, CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu, User } from 'lucide-react';
+import { CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu, User, Lock } from 'lucide-react';
 
 export function SettingsView() {
     const {
@@ -174,92 +174,92 @@ export function SettingsView() {
             <section className="space-y-6">
                 <div className="flex items-center gap-3 text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-200 dark:border-slate-800">
                     <CreditCard size={24} className="text-accent" />
-                    <h3 className="text-xl font-semibold">Subscription & Support</h3>
+                    <h3 className="text-xl font-semibold">Pro Membership</h3>
                 </div>
 
-                <div className="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-8 shadow-sm">
-                    <div className="max-w-2xl space-y-8">
+                <div className="glass rounded-3xl p-10 shadow-2xl relative overflow-hidden group">
+                    {/* Decorative element */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32" />
+
+                    <div className="relative z-10 max-w-2xl space-y-8">
                         <div className="space-y-4">
                             {isPaid ? (
-                                <div className="flex items-center gap-2 bg-yellow-500 text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-yellow-500/20 w-fit">
-                                    <Crown size={24} /> Professional Plan Active
+                                <div className="flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-6 py-4 rounded-2xl font-black shadow-xl shadow-yellow-500/20 w-fit transform hover:scale-105 transition-transform cursor-default">
+                                    <Crown size={28} className="animate-pulse" />
+                                    <span className="text-xl uppercase tracking-tighter">Pro Access Unlocked</span>
                                 </div>
                             ) : (
-                                <div className="flex flex-col gap-4">
-                                    <h4 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Upgrade to Pro</h4>
-                                    <div className="flex items-center gap-3 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 p-2 rounded-2xl w-full max-w-md shadow-inner">
-                                        <input
-                                            type="text"
-                                            value={upgradeCode}
-                                            onChange={(e) => setUpgradeCode(e.target.value)}
-                                            placeholder="Enter Access Code"
-                                            className={`flex-1 bg-transparent px-4 py-2 text-base focus:outline-none font-bold placeholder:font-medium transition-colors ${codeError ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}
-                                        />
+                                <div className="flex flex-col gap-6">
+                                    <div className="space-y-2">
+                                        <h4 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">Upgrade Your Experience</h4>
+                                        <p className="text-slate-500 dark:text-slate-400">Unlock premium AI models and extended storage limits.</p>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row items-center gap-4 bg-white/5 dark:bg-slate-900/50 p-2 rounded-2xl border border-slate-200 dark:border-white/10 shadow-inner">
+                                        <div className="flex items-center gap-3 flex-1 px-4 w-full">
+                                            <Key size={18} className="text-slate-400" />
+                                            <input
+                                                type="text"
+                                                value={upgradeCode}
+                                                onChange={(e) => setUpgradeCode(e.target.value)}
+                                                placeholder="Enter your activation code"
+                                                className={`flex-1 bg-transparent py-3 text-lg focus:outline-none font-bold placeholder:font-medium placeholder:text-slate-400 transition-colors ${codeError ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}
+                                            />
+                                        </div>
                                         <button
                                             onClick={handleUpgrade}
-                                            className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 whitespace-nowrap"
+                                            className="w-full sm:w-auto bg-primary hover:bg-primary-dark text-white px-8 py-4 rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/30 active:scale-95"
                                         >
-                                            <Zap size={16} /> Upgrade Now
+                                            <Zap size={20} fill="currentColor" /> ACTIVATE
                                         </button>
                                     </div>
-                                    {codeError && <p className="text-xs font-bold text-red-500 uppercase tracking-widest ml-4 animate-bounce">Invalid code provided.</p>}
+                                    {codeError && <p className="text-sm font-black text-red-500 uppercase tracking-[0.2em] ml-4 animate-bounce">Access Denied: Invalid Code</p>}
                                 </div>
                             )}
                         </div>
 
-                        <div className="space-y-2">
-                            <p className="text-slate-700 dark:text-slate-200 text-lg font-medium">
+                        <div className="space-y-3">
+                            <p className="text-slate-700 dark:text-slate-200 text-lg">
                                 Enjoy higher upload limits and premium AI models.
                             </p>
-                            <p className="text-slate-500 dark:text-slate-400">
-                                Current storage limit: <strong className="text-primary">{limitInMB}MB</strong>
-                            </p>
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-slate-400 uppercase text-xs font-black tracking-widest">Active Storage Limit</span>
+                                <span className="text-2xl font-black text-primary">{limitInMB}MB</span>
+                            </div>
                         </div>
 
-                        <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Contact Support:</p>
-                            <div className="flex items-center gap-3 p-4 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-white dark:border-slate-800 shadow-sm w-fit">
-                                <Mail className="text-primary" size={20} />
-                                <a href="mailto:reactcc@atomicmail.io" className="font-bold text-primary hover:underline text-lg">
-                                    reactcc@atomicmail.io
+                        <div className="pt-8 border-t border-slate-200 dark:border-white/10 flex flex-wrap gap-8 items-center">
+                            <div className="flex-1 min-w-[200px] space-y-4">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Contact Support:</p>
+                                <a href="mailto:reactcc@atomicmail.io" className="flex items-center gap-3 p-4 glass rounded-2xl hover:border-primary/50 transition-colors group/mail w-fit">
+                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover/mail:bg-primary group-hover/mail:text-white transition-colors">
+                                        <Mail size={20} />
+                                    </div>
+                                    <span className="font-bold text-slate-900 dark:text-white text-lg">reactcc@atomicmail.io</span>
                                 </a>
+                            </div>
+
+                            <div className="w-32 h-32 opacity-10 grayscale group-hover:grayscale-0 group-hover:opacity-20 transition-all duration-700">
+                                <Shield size={128} />
                             </div>
                         </div>
 
                         {isPaid && (
                             <button
                                 onClick={() => setIsPaid(false)}
-                                className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors uppercase tracking-[0.2em]"
+                                className="text-[10px] font-black text-slate-400 hover:text-red-500 transition-colors uppercase tracking-[0.3em] flex items-center gap-2"
                             >
-                                (Debug) Disable Professional Access
+                                <Lock size={10} /> Deauthorize Professional Plan
                             </button>
                         )}
-
-                        {/* Connected Accounts - HIDDEN */}
-                        <div className="hidden">
-                            <div className="flex items-center gap-2 mb-4 text-slate-900 dark:text-white font-bold">
-                                <User size={18} className="text-secondary" />
-                                Connected Accounts (Internal Data)
-                            </div>
-                            <div className="space-y-3">
-                                {accounts.map(acc => (
-                                    <div key={acc} className="text-[10px] py-1 px-2 bg-slate-50 dark:bg-slate-900 rounded-lg text-slate-400 font-mono break-all border border-slate-200">
-                                        {acc}
-                                    </div>
-                                ))}
-                                <div className="mt-2 text-[10px] text-slate-400 font-bold">
-                                    ACCESS_PASSWORD_INTERNAL: 011
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
 
+            {/* Appearance Section */}
             <section className="space-y-6">
                 <div className="flex items-center gap-3 text-slate-900 dark:text-slate-100 pb-2 border-b border-slate-200 dark:border-slate-800">
                     <Palette size={24} className="text-secondary" />
-                    <h3 className="text-xl font-semibold">Appearance</h3>
+                    <h3 className="text-xl font-semibold">Background & Themes</h3>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -270,29 +270,48 @@ export function SettingsView() {
                                 key={theme.id}
                                 onClick={() => setTheme(theme.id)}
                                 className={`
-                            relative group p-4 rounded-xl border transition-all duration-300 flex flex-col gap-3 text-left overflow-hidden
+                            relative group p-5 rounded-2xl border transition-all duration-500 flex flex-col gap-4 text-left overflow-hidden
                             ${isActive
-                                        ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                                        : 'border-slate-200 dark:border-slate-800 bg-bgSurface hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-lg'
+                                        ? 'border-primary ring-4 ring-primary/10 bg-primary/5'
+                                        : 'border-slate-200 dark:border-white/10 bg-bgSurface dark:bg-slate-900/50 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-xl'
                                     }
                         `}
                             >
                                 <div className="flex items-center justify-between w-full">
-                                    <span className={`font-semibold text-sm ${isActive ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+                                    <span className={`font-black text-sm uppercase tracking-tighter ${isActive ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>
                                         {theme.name}
                                     </span>
-                                    {isActive && <Check size={16} className="text-primary" />}
+                                    {isActive && <div className="w-2 h-2 rounded-full bg-primary animate-ping" />}
                                 </div>
 
-                                <div className="flex gap-1 h-3 w-full rounded-full overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
+                                <div className="flex gap-2 h-4 w-full rounded-lg overflow-hidden opacity-60 group-hover:opacity-100 transition-opacity">
                                     <div className="h-full flex-1" style={{ backgroundColor: theme.colors.primary }} />
                                     <div className="h-full flex-1" style={{ backgroundColor: theme.colors.secondary }} />
                                     <div className="h-full flex-1" style={{ backgroundColor: theme.colors.accent }} />
-                                    <div className="h-full flex-1" style={{ backgroundColor: theme.colors.bgApp }} />
                                 </div>
                             </button>
                         );
                     })}
+                </div>
+            </section>
+
+            {/* Accounts & Metadata - DISCRETE AT BOTTOM */}
+            <section className="pt-20 border-t border-slate-200 dark:border-white/5 opacity-50 hover:opacity-100 transition-opacity">
+                <div className="max-w-md mx-auto space-y-6">
+                    <div className="flex items-center gap-2 mb-4 text-slate-400 font-black uppercase text-[10px] tracking-[0.4em] justify-center">
+                        <User size={12} />
+                        Connected Accounts Metadata
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                        {accounts.map(acc => (
+                            <div key={acc} className="text-[10px] py-2 px-4 bg-slate-100 dark:bg-slate-950/50 rounded-xl text-slate-500 font-mono break-all border border-slate-200 dark:border-white/5 text-center">
+                                {acc}
+                            </div>
+                        ))}
+                        <div className="mt-4 text-[10px] text-slate-400 font-black text-center tracking-[0.5em] uppercase">
+                            Internal ID: 011-BPC
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
