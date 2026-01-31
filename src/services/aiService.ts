@@ -22,9 +22,9 @@ RULES FOR FLASHCARD CREATION:
 2. **Clarity**: Use simple language. Avoid ambiguity.
 3. **Bold Key Terms**: Use double asterisks **like this** to highlight the most important terms or answers in the back of the card.
 4. **Accuracy**: Ensure every card is factually correct based on the source material.
-5. **Formatting**: Use Markdown for newlines (\n\n) if explaining a multi-step process.
+5. **Formatting**: Use real newlines or standard JSON-escaped newlines (\\n) for multi-step processes.
 
-Return ONLY a valid JSON array of objects with "front" and "back" keys.
+Return ONLY a valid JSON array of objects with "front" and "back" keys. Do not wrap in markdown code blocks.
 Example: [{"front": "What is the powerhouse of the cell?", "back": "The **Mitochondria**."}]`;
 
     const userPrompt = `Instruction: ${instruction}\n\nContent: ${content}`;
