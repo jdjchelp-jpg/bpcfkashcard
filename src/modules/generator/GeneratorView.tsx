@@ -100,20 +100,22 @@ export function GeneratorView() {
             <div className="space-y-6 flex flex-col h-full w-full">
 
                 {/* Provider Selector */}
-                <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-white/10 w-fit">
+                <div className="glass flex p-1.5 rounded-2xl w-fit relative z-20 shadow-xl overflow-hidden group/provider">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover/provider:opacity-100 transition-opacity" />
                     <button
                         onClick={() => setPreferredProvider('openrouter')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${preferredProvider === 'openrouter' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all relative z-10 uppercase tracking-widest ${preferredProvider === 'openrouter' ? 'bg-white dark:bg-white/10 text-primary shadow-lg ring-1 ring-white/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                     >
-                        <Cpu size={14} /> OpenRouter
+                        <Cpu size={14} className={preferredProvider === 'openrouter' ? 'animate-pulse' : ''} /> OpenRouter
                     </button>
                     <button
                         onClick={() => setPreferredProvider('poe')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${preferredProvider === 'poe' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all relative z-10 uppercase tracking-widest ${preferredProvider === 'poe' ? 'bg-white dark:bg-white/10 text-primary shadow-lg ring-1 ring-white/20' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                     >
-                        <Cpu size={14} /> Poe
+                        <Cpu size={14} className={preferredProvider === 'poe' ? 'animate-pulse' : ''} /> Poe
                     </button>
-                    <div className="ml-4 flex items-center gap-2 px-3 py-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-lg text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">
+                    <div className="ml-6 flex items-center gap-2 px-4 py-2 bg-slate-900/5 dark:bg-white/5 rounded-xl text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] relative z-10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                         Active: {currentModelName}
                     </div>
                 </div>

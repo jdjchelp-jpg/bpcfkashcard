@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { themes } from '@/utils/themes';
-import { CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu, User, Lock } from 'lucide-react';
+import { CreditCard, Key, Palette, Shield, Mail, Crown, Zap, Cpu } from 'lucide-react';
 
 export function SettingsView() {
     const {
@@ -17,13 +17,7 @@ export function SettingsView() {
     const [upgradeCode, setUpgradeCode] = useState('');
     const [codeError, setCodeError] = useState(false);
 
-    // Hidden account data preserved as requested
-    const accounts = [
-        'reactcc@atomicmail.io',
-        'simonejohnson840@gmail.com',
-        'jdjchelp@gmail.com',
-        'simonejohnson840+anything@gmail.com'
-    ];
+
 
     const handleUpgrade = () => {
         if (upgradeCode === '2121') {
@@ -242,15 +236,6 @@ export function SettingsView() {
                                 <Shield size={128} />
                             </div>
                         </div>
-
-                        {isPaid && (
-                            <button
-                                onClick={() => setIsPaid(false)}
-                                className="text-[10px] font-black text-slate-400 hover:text-red-500 transition-colors uppercase tracking-[0.3em] flex items-center gap-2"
-                            >
-                                <Lock size={10} /> Deauthorize Professional Plan
-                            </button>
-                        )}
                     </div>
                 </div>
             </section>
@@ -292,26 +277,6 @@ export function SettingsView() {
                             </button>
                         );
                     })}
-                </div>
-            </section>
-
-            {/* Accounts & Metadata - DISCRETE AT BOTTOM */}
-            <section className="pt-20 border-t border-slate-200 dark:border-white/5 opacity-50 hover:opacity-100 transition-opacity">
-                <div className="max-w-md mx-auto space-y-6">
-                    <div className="flex items-center gap-2 mb-4 text-slate-400 font-black uppercase text-[10px] tracking-[0.4em] justify-center">
-                        <User size={12} />
-                        Connected Accounts Metadata
-                    </div>
-                    <div className="grid grid-cols-1 gap-2">
-                        {accounts.map(acc => (
-                            <div key={acc} className="text-[10px] py-2 px-4 bg-slate-100 dark:bg-slate-950/50 rounded-xl text-slate-500 font-mono break-all border border-slate-200 dark:border-white/5 text-center">
-                                {acc}
-                            </div>
-                        ))}
-                        <div className="mt-4 text-[10px] text-slate-400 font-black text-center tracking-[0.5em] uppercase">
-                            Internal ID: 011-BPC
-                        </div>
-                    </div>
                 </div>
             </section>
         </div>
