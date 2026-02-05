@@ -3,7 +3,8 @@ import { useStore } from '@/context/StoreContext';
 import { Flashcard } from '@/components/flashcard/Flashcard';
 import { BookOpen, Download, Trash2, Pencil, X, Save, Printer, FileText, FileSpreadsheet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { exportToExcel, exportToPDF, exportToWord } from '@/utils/exportUtils';
+import { exportToExcel, exportToPDF, exportToWord, exportToJSON } from '@/utils/exportUtils';
+import { parseJSONImport, parseExcelImport } from '@/utils/importUtils';
 import { PrintViewModal } from './PrintViewModal';
 
 export function LibraryView() {
@@ -13,6 +14,34 @@ export function LibraryView() {
     const [editBack, setEditBack] = useState('');
     const [showPrintModal, setShowPrintModal] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            let importedCards: any[] = [];
+            if (file.name.endsWith('.json')) {
+                importedCards = await parseJSONImport(file);
+            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+                importedCards = await parseExcelImport(file);
+            } else {
+                alert('Unsupported file format. Please use JSON, Excel, or CSV.');
+                return;
+            }
+
+            if (importedCards.length > 0) {
+                if (confirm(`Import ${importedCards.length} cards?`)) {
+                    setFlashcards([...flashcards, ...importedCards]);
+                }
+            }
+        } catch (err) {
+            console.error('Import failed:', err);
+            alert('Failed to import cards. Please check the file format.');
+        } finally {
+            e.target.value = '';
+        }
+    };
 
     const handleDelete = (id: string) => {
         if (confirm('Are you sure you want to delete this card?')) {
@@ -59,6 +88,10 @@ export function LibraryView() {
                     <p className="text-slate-500 dark:text-slate-400 mt-2">{flashcards.length} cards in deck</p>
                 </div>
                 <div className="flex gap-2 relative">
+                    <label className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm cursor-pointer">
+                        <Download size={16} className="rotate-180" /> Import
+                        <input type="file" className="hidden" accept=".json,.xlsx,.xls,.csv" onChange={handleImport} />
+                    </label>
                     <button
                         onClick={() => setShowPrintModal(true)}
                         className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm"
@@ -81,13 +114,16 @@ export function LibraryView() {
                                     exit={{ opacity: 0, y: 10 }}
                                     className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden z-20"
                                 >
-                                    <button onClick={() => exportToExcel(flashcards)} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <button onClick={() => { exportToJSON(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                        <FileText size={16} className="text-orange-500" /> JSON (.json)
+                                    </button>
+                                    <button onClick={() => { exportToExcel(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                                         <FileSpreadsheet size={16} className="text-green-500" /> Excel (.xlsx)
                                     </button>
-                                    <button onClick={() => exportToPDF(flashcards)} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <button onClick={() => { exportToPDF(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                                         <FileText size={16} className="text-red-500" /> PDF (.pdf)
                                     </button>
-                                    <button onClick={() => exportToWord(flashcards)} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <button onClick={() => { exportToWord(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                                         <FileText size={16} className="text-blue-500" /> Word (.docx)
                                     </button>
                                 </motion.div>

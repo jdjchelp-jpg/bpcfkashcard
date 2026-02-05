@@ -19,33 +19,95 @@ export const exportToExcel = (flashcards: FlashcardData[], filename = 'flashcard
 };
 
 /**
- * Export to PDF (.pdf) - Simple list format
+ * Export to JSON (.json)
+ */
+export const exportToJSON = (flashcards: FlashcardData[], filename = 'flashcards.json') => {
+    const dataStr = JSON.stringify(flashcards, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    saveAs(blob, filename);
+};
+
+/**
+ * Export to PDF (.pdf) - Clean layout
  */
 export const exportToPDF = (flashcards: FlashcardData[], filename = 'flashcards.pdf') => {
     const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
 
-    doc.setFontSize(20);
-    doc.text("Flashcards Export", 20, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(24);
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text("Flashcards Study Set", margin, 25);
 
-    doc.setFontSize(12);
-    let y = 40;
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.line(margin, 30, pageWidth - margin, 30);
 
-    flashcards.forEach((card, index) => {
-        // Check for page break
-        if (y > 250) {
-            doc.addPage();
-            y = 20;
-        }
+    let y = 45;
+
+    flashcards.forEach((card) => {
+        // Calculate heights
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        const questionLabel = "QUESTION";
 
         doc.setFont("helvetica", "bold");
-        doc.text(`Q${index + 1}: ${card.front}`, 20, y);
-        y += 10;
+        doc.setFontSize(14);
+        const questionLines = doc.splitTextToSize(card.front, contentWidth - 10);
+        const questionHeight = (questionLines.length * 7) + 5;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        const answerLabel = "ANSWER";
 
         doc.setFont("helvetica", "normal");
-        const splitBack = doc.splitTextToSize(`A: ${card.back}`, 170);
-        doc.text(splitBack, 20, y);
+        doc.setFontSize(12);
+        const answerLines = doc.splitTextToSize(card.back, contentWidth - 10);
+        const answerHeight = (answerLines.length * 6) + 5;
 
-        y += (splitBack.length * 7) + 10;
+        const totalCardHeight = questionHeight + answerHeight + 25;
+
+        // Check for page break
+        if (y + totalCardHeight > 270) {
+            doc.addPage();
+            y = 25;
+        }
+
+        // Card Box
+        doc.setDrawColor(241, 245, 249); // slate-100
+        doc.setFillColor(248, 250, 252); // slate-50
+        doc.roundedRect(margin - 2, y - 5, contentWidth + 4, totalCardHeight, 3, 3, 'FD');
+
+        // Question
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184); // slate-400
+        doc.text(questionLabel, margin + 2, y + 2);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        doc.setTextColor(15, 23, 42); // slate-900
+        doc.text(questionLines, margin + 2, y + 10);
+
+        y += questionHeight + 8;
+
+        // Divider
+        doc.setDrawColor(226, 232, 240);
+        doc.line(margin + 2, y - 2, pageWidth - margin - 2, y - 2);
+
+        // Answer
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text(answerLabel, margin + 2, y + 5);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85); // slate-700
+        doc.text(answerLines, margin + 2, y + 12);
+
+        y += answerHeight + 15;
     });
 
     doc.save(filename);
