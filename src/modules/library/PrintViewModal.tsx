@@ -9,12 +9,16 @@ interface PrintViewModalProps {
 }
 
 export function PrintViewModal({ onClose }: PrintViewModalProps) {
-    const { flashcards } = useStore();
+    const { flashcards, studySets, activeSetId } = useStore();
     const componentRef = useRef<HTMLDivElement>(null);
+
+    const activeSet = studySets.find(s => s.id === activeSetId);
+    const title = activeSet?.title || 'Study Set';
+    const firstType = flashcards[0]?.type || 'flashcards';
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
-        documentTitle: 'Flashcards-Print',
+        documentTitle: `${title}-${firstType}`,
     });
 
     return (
@@ -45,33 +49,59 @@ export function PrintViewModal({ onClose }: PrintViewModalProps) {
                 <div className="flex-1 overflow-auto p-8 bg-slate-500/10">
                     <div
                         ref={componentRef}
-                        className="bg-white p-12 max-w-2xl mx-auto shadow-xl min-h-full print:shadow-none print:p-0 print:max-w-none"
+                        className="bg-white p-12 max-w-3xl mx-auto shadow-xl min-h-full print:shadow-none print:p-0 print:max-w-none"
                     >
-                        <h1 className="text-3xl font-bold text-slate-900 mb-8 pb-4 border-b-2 border-slate-900">
-                            Flashcards Study Set
-                        </h1>
+                        <div className="mb-10 pb-6 border-b-2 border-slate-900">
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400 font-black mb-1">Generated Study Material</p>
+                                    <h1 className="text-4xl font-extrabold text-slate-900 leading-none">
+                                        {title}
+                                    </h1>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-black uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full text-slate-600">
+                                        {firstType}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-                        <div className="grid grid-cols-1 gap-6">
+                        <div className="grid grid-cols-1 gap-8">
                             {flashcards.map((card, idx) => (
-                                <div key={card.id} className="border-2 border-slate-200 rounded-xl p-6 break-inside-avoid">
+                                <div key={card.id} className="break-inside-avoid">
                                     <div className="flex items-start gap-4">
-                                        <span className="bg-slate-100 text-slate-500 font-bold px-2 py-1 rounded text-xs">
-                                            #{idx + 1}
+                                        <span className="bg-slate-900 text-white font-black px-3 py-1.5 rounded-lg text-sm">
+                                            {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                                         </span>
                                         <div className="space-y-4 w-full">
                                             <div>
-                                                <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Question</p>
-                                                <p className="text-lg font-medium text-slate-900">{card.front}</p>
+                                                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">
+                                                    {firstType === 'flashcards' ? 'Question' : 'Problem / Question'}
+                                                </p>
+                                                <p className="text-xl font-bold text-slate-900 leading-snug">{card.front}</p>
                                             </div>
-                                            <div className="h-px bg-slate-100 w-full" />
-                                            <div>
-                                                <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-1">Answer</p>
-                                                <p className="text-slate-700 whitespace-pre-wrap">{card.back}</p>
+
+                                            {/* For worksheets, we might want to add space to write if we wanted a "Question Only" version,
+                                                but for now we'll show both for study purposes. */}
+
+                                            <div className="pl-4 border-l-4 border-slate-100 py-1">
+                                                <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-1">
+                                                    {firstType === 'exam' ? 'Answer Key / Explantion' : 'Answer / Explanation'}
+                                                </p>
+                                                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed text-base italic">{card.back}</p>
                                             </div>
                                         </div>
                                     </div>
+                                    {idx < flashcards.length - 1 && <div className="h-px bg-slate-100 w-full mt-8" />}
                                 </div>
                             ))}
+                        </div>
+
+                        <div className="mt-20 pt-8 border-t border-slate-100 text-center">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold">
+                                Created with Flash.AI • {new Date().toLocaleDateString()}
+                            </p>
                         </div>
                     </div>
                 </div>

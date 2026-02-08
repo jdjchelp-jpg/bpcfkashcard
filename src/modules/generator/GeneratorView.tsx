@@ -2,21 +2,23 @@ import { useState } from 'react';
 import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flashcard } from '@/components/flashcard/Flashcard';
-import { useStore } from '@/context/StoreContext';
-import { generateCompletion } from '@/services/aiService';
+import { useStore, StudySet } from '@/context/StoreContext';
+import { generateCompletion, GenerationMode } from '@/services/aiService';
 import { parseFile } from '@/utils/fileParser';
 
 export function GeneratorView() {
     const {
         openRouterKey, poeKey, preferredProvider, setPreferredProvider,
         openRouterModel, poeModel,
-        setFlashcards, setIsGenerating, isGenerating, maxUploadSize
+        setFlashcards, setIsGenerating, isGenerating, maxUploadSize,
+        studySets, setStudySets, setActiveSetId
     } = useStore();
 
     const [instruction, setInstruction] = useState('');
     const [content, setContent] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [activeInputMode, setActiveInputMode] = useState<'text' | 'file'>('text');
+    const [mode, setMode] = useState<GenerationMode>('flashcards');
     const [error, setError] = useState<string | null>(null);
     const [generatedPreview, setGeneratedPreview] = useState<any[]>([]);
 
@@ -61,15 +63,27 @@ export function GeneratorView() {
                 content: sourceText.slice(0, 15000),
                 provider: preferredProvider,
                 model,
-                apiKey
+                apiKey,
+                mode
             });
 
             if (response && Array.isArray(response)) {
                 const cardsWithIds = response.map((card: any) => ({
                     ...card,
                     id: crypto.randomUUID(),
+                    type: mode
                 }));
 
+                // Create a new Study Set
+                const newSet: StudySet = {
+                    id: crypto.randomUUID(),
+                    title: instruction.slice(0, 30) || (file ? file.name : content.slice(0, 30)) || `New ${mode}`,
+                    items: cardsWithIds,
+                    createdAt: Date.now()
+                };
+
+                setStudySets([...studySets, newSet]);
+                setActiveSetId(newSet.id);
                 setFlashcards(cardsWithIds);
                 setGeneratedPreview(cardsWithIds);
             } else {
@@ -78,7 +92,7 @@ export function GeneratorView() {
 
         } catch (err: any) {
             console.error(err);
-            setError(err.message || "Failed to generate flashcards.");
+            setError(err.message || "Failed to generate content.");
         } finally {
             setIsGenerating(false);
         }
@@ -210,6 +224,25 @@ export function GeneratorView() {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+                </div>
+
+                {/* Generation Mode Selector */}
+                <div className="glass rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
+                    <div className="flex items-center gap-2 mb-4 text-accent relative z-10">
+                        <Sparkles size={18} />
+                        <span className="font-black text-xs uppercase tracking-[0.2em]">Generation Mode</span>
+                    </div>
+                    <div className="flex bg-slate-100 dark:bg-slate-950/50 rounded-xl p-1 border border-slate-200 dark:border-white/5 shadow-inner relative z-10">
+                        {(['flashcards', 'worksheet', 'exam'] as const).map((m) => (
+                            <button
+                                key={m}
+                                onClick={() => setMode(m)}
+                                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${mode === m ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-400'}`}
+                            >
+                                {m}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

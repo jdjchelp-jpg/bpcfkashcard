@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
-import { Sparkles, BookOpen, Settings, Video, Crown } from 'lucide-react';
+import { Sparkles, BookOpen, Settings, Video, Crown, LayoutGrid } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 
 interface SidebarProps {
-    activeTab: 'create' | 'library' | 'video' | 'settings';
-    onTabChange: (tab: 'create' | 'library' | 'video' | 'settings') => void;
+    activeTab: 'create' | 'catalog' | 'library' | 'video' | 'settings';
+    onTabChange: (tab: 'create' | 'catalog' | 'library' | 'video' | 'settings') => void;
 }
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -12,6 +12,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
     const navItems = [
         { id: 'create', icon: Sparkles, label: 'Create' },
+        { id: 'catalog', icon: LayoutGrid, label: 'Catalog' },
         { id: 'library', icon: BookOpen, label: 'Library' },
         { id: 'video', icon: Video, label: 'Video' },
         { id: 'settings', icon: Settings, label: 'Settings' },

@@ -1,10 +1,20 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Theme, themes } from '@/utils/themes';
 
+export type ItemType = 'flashcards' | 'worksheet' | 'exam';
+
 export interface FlashcardData {
     id: string;
     front: string;
     back: string;
+    type?: ItemType;
+}
+
+export interface StudySet {
+    id: string;
+    title: string;
+    items: FlashcardData[];
+    createdAt: number;
 }
 
 export type AIProvider = 'openrouter' | 'poe';
@@ -22,13 +32,17 @@ interface StoreContextType {
     setPoeModel: (model: string) => void;
     flashcards: FlashcardData[];
     setFlashcards: (cards: FlashcardData[]) => void;
+    studySets: StudySet[];
+    setStudySets: (sets: StudySet[]) => void;
+    activeSetId: string | null;
+    setActiveSetId: (id: string | null) => void;
     isGenerating: boolean;
     setIsGenerating: (isGenerating: boolean) => void;
     currentTheme: Theme;
     setTheme: (themeId: string) => void;
     isPaid: boolean;
-    setIsPaid: (isPaid: boolean) => void;
-    maxUploadSize: number; // in bytes
+    setIsPaid: (val: boolean) => void;
+    maxUploadSize: number;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -52,6 +66,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const saved = localStorage.getItem('flashcards');
         return saved ? JSON.parse(saved) : [];
     });
+
+    const [studySets, setStudySetsState] = useState<StudySet[]>(() => {
+        const saved = localStorage.getItem('studySets');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    const [activeSetId, setActiveSetIdState] = useState<string | null>(() => {
+        return localStorage.getItem('activeSetId');
+    });
+
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Pro Status State
@@ -94,6 +118,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('poeModel', model);
     };
 
+    const setStudySets = (sets: StudySet[]) => {
+        setStudySetsState(sets);
+        localStorage.setItem('studySets', JSON.stringify(sets));
+    };
+
+    const setActiveSetId = (id: string | null) => {
+        setActiveSetIdState(id);
+        if (id) localStorage.setItem('activeSetId', id);
+        else localStorage.removeItem('activeSetId');
+    };
+
     // Unified Persistence Effect
     useEffect(() => {
         localStorage.setItem('preferredProvider', preferredProvider);
@@ -103,7 +138,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         localStorage.setItem('flashcards', JSON.stringify(flashcards));
-    }, [flashcards]);
+
+        // Sync with studySets if there's an active set
+        if (activeSetId) {
+            setStudySetsState(prevSets => {
+                const updatedSets = prevSets.map(s =>
+                    s.id === activeSetId ? { ...s, items: flashcards } : s
+                );
+                localStorage.setItem('studySets', JSON.stringify(updatedSets));
+                return updatedSets;
+            });
+        }
+    }, [flashcards, activeSetId]);
 
     // Apply Theme
     useEffect(() => {
@@ -159,6 +205,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             setPoeModel,
             flashcards,
             setFlashcards,
+            studySets,
+            setStudySets,
+            activeSetId,
+            setActiveSetId,
             isGenerating,
             setIsGenerating,
             currentTheme,

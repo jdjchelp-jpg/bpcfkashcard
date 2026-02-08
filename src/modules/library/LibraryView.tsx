@@ -8,7 +8,9 @@ import { parseJSONImport, parseExcelImport } from '@/utils/importUtils';
 import { PrintViewModal } from './PrintViewModal';
 
 export function LibraryView() {
-    const { flashcards, setFlashcards } = useStore();
+    const { flashcards, setFlashcards, studySets, activeSetId } = useStore();
+    const activeSet = studySets.find(s => s.id === activeSetId);
+
     const [editingCardId, setEditingCardId] = useState<string | null>(null);
     const [editFront, setEditFront] = useState('');
     const [editBack, setEditBack] = useState('');
@@ -84,8 +86,12 @@ export function LibraryView() {
         <div className="space-y-8 pb-20 relative">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Your Library</h2>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">{flashcards.length} cards in deck</p>
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                        {activeSet ? activeSet.title : 'Your Library'}
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">
+                        {flashcards.length} items in {activeSet ? 'this set' : 'deck'}
+                    </p>
                 </div>
                 <div className="flex gap-2 relative">
                     <label className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm cursor-pointer">

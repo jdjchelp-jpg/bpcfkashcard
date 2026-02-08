@@ -6,8 +6,10 @@ import { LibraryView } from '@/modules/library/LibraryView'
 import { VideoView } from '@/modules/video/VideoView'
 import { SettingsView } from '@/modules/settings/SettingsView'
 
+import { CatalogView } from '@/modules/library/CatalogView'
+
 function App() {
-    const [activeTab, setActiveTab] = useState<'create' | 'library' | 'video' | 'settings'>('create')
+    const [activeTab, setActiveTab] = useState<'create' | 'catalog' | 'library' | 'video' | 'settings'>('create')
 
     return (
         <div className="min-h-screen bg-bgApp text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -28,6 +30,10 @@ function App() {
                         </header>
                         <GeneratorView />
                     </div>
+                )}
+
+                {activeTab === 'catalog' && (
+                    <CatalogView onSelect={() => setActiveTab('library')} />
                 )}
 
                 {activeTab === 'library' && (

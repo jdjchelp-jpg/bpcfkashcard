@@ -3,18 +3,24 @@ import { AIProvider } from "@/context/StoreContext";
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const POE_URL = "https://api.poe.com/v1/chat/completions";
 
+export type GenerationMode = 'flashcards' | 'worksheet' | 'exam';
+
 export interface GenerationParams {
     instruction: string;
     content: string;
     provider: AIProvider;
     model: string;
     apiKey: string;
+    mode?: GenerationMode;
 }
 
-export async function generateCompletion({ instruction, content, provider, model, apiKey }: GenerationParams) {
+export async function generateCompletion({ instruction, content, provider, model, apiKey, mode = 'flashcards' }: GenerationParams) {
     const url = provider === 'openrouter' ? OPENROUTER_URL : POE_URL;
 
-    const systemPrompt = `You are an expert educational psychologist and flashcard creator. 
+    let systemPrompt = '';
+
+    if (mode === 'flashcards') {
+        systemPrompt = `You are an expert educational psychologist and flashcard creator. 
 Your goal is to transform complex information into clear, effective flashcards following the Minimum Information Principle.
 
 RULES FOR FLASHCARD CREATION:
@@ -26,6 +32,31 @@ RULES FOR FLASHCARD CREATION:
 
 Return ONLY a valid JSON array of objects with "front" and "back" keys. Do not wrap in markdown code blocks.
 Example: [{"front": "What is the powerhouse of the cell?", "back": "The **Mitochondria**."}]`;
+    } else if (mode === 'worksheet') {
+        systemPrompt = `You are an expert educator creating a student worksheet. 
+Your goal is to create high-quality open-ended or fill-in-the-blank questions based on the content.
+
+RULES FOR WORKSHEET CREATION:
+1. **Diverse Questions**: Create a mix of conceptual and factual questions.
+2. **Contextual**: Ensure questions require thinking, not just copying.
+3. **Accuracy**: Ensure every question is solvable using the source material.
+4. **Formatting**: Question should be in the "front" field, and the sample answer/explanation in the "back" field.
+
+Return ONLY a valid JSON array of objects with "front" and "back" keys.
+Example: [{"front": "Explain the role of photosynthesis in the carbon cycle.", "back": "Plants absorb CO2 and release O2..."}]`;
+    } else if (mode === 'exam') {
+        systemPrompt = `You are an expert examiner creating a formal test. 
+Your goal is to create challenging, clear exam questions.
+
+RULES FOR EXAM CREATION:
+1. **Structured**: Questions should be rigorous and formal.
+2. **Clear Objectives**: Each question should test a specific learning objective.
+3. **Accuracy**: Every question must be factually sound.
+4. **Formatting**: Question should be in the "front" field, and the answer key/scoring guide in the "back" field.
+
+Return ONLY a valid JSON array of objects with "front" and "back" keys.
+Example: [{"front": "Discuss the primary causes of the French Revolution (1789).", "back": "1. Social Inequality, 2. Economic Crisis..."}]`;
+    }
 
     const userPrompt = `Instruction: ${instruction}\n\nContent: ${content}`;
 
