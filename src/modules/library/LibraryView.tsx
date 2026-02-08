@@ -107,6 +107,10 @@ export function LibraryView() {
                     </p>
                 </div>
                 <div className="flex gap-2 relative">
+                    <label className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm cursor-pointer">
+                        <Download size={16} className="rotate-180" /> Import
+                        <input type="file" className="hidden" accept=".json,.xlsx,.xls,.csv" onChange={handleImport} />
+                    </label>
                     <button
                         onClick={handleQuickExportPDF}
                         className="px-4 py-2 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg text-sm font-bold flex items-center gap-2 border border-red-500/20 transition-all shadow-sm"
