@@ -12,6 +12,7 @@ export function LibraryView() {
     const activeSet = studySets.find(s => s.id === activeSetId);
     const [editingCardId, setEditingCardId] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<'grid' | 'document'>('grid');
+    const [activeExamHtml, setActiveExamHtml] = useState<string | null>(null);
     const [editFront, setEditFront] = useState('');
     const [editBack, setEditBack] = useState('');
     const [showPrintModal, setShowPrintModal] = useState(false);
@@ -177,71 +178,221 @@ export function LibraryView() {
 
             {viewMode === 'document' ? (
                 <div className="max-w-4xl mx-auto space-y-6">
-                    {flashcards.map((card, index) => (
-                        <div key={card.id} className="glass rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-white/5 group relative">
-                            <div className="flex items-start gap-4">
-                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
-                                    {index + 1}
-                                </span>
-                                <div className="space-y-4 flex-1">
-                                    <div>
-                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Question</h4>
-                                        <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{card.front}</p>
+                    {flashcards.map((card, index) => {
+                        if (card.type === 'interactive_exam') {
+                            return (
+                                <div key={card.id} className="glass rounded-2xl p-8 shadow-xl border border-primary/20 bg-primary/5 group relative flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <span className="bg-primary text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-lg shadow-primary/30">
+                                            <FileSpreadsheet size={24} />
+                                        </span>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{card.front}</h3>
+                                            <p className="text-slate-500 dark:text-slate-400">Interactive Assessment</p>
+                                        </div>
                                     </div>
-                                    <div className="pt-4 border-t border-slate-100 dark:border-white/5">
-                                        <h4 className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Answer / Explanation</h4>
-                                        <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{card.back}</p>
+                                    <button
+                                        onClick={() => setActiveExamHtml(card.back)}
+                                        className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold shadow-lg shadow-primary/20 transition-all transform hover:scale-105"
+                                    >
+                                        Launch Exam
+                                    </button>
+                                    <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleDelete(card.id)}
+                                            className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
+                            );
+                        }
 
-                            <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button
-                                    onClick={() => startEditing(card)}
-                                    className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20"
-                                    title="Edit"
-                                >
-                                    <Pencil size={14} />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(card.id)}
-                                    className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
-                                    title="Delete"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
+                        if (card.type === 'interactive_worksheet') {
+                            return (
+                                <div key={card.id} className="glass rounded-2xl p-8 shadow-xl border border-secondary/20 bg-secondary/5 group relative flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <span className="bg-secondary text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-lg shadow-secondary/30">
+                                            <FileText size={24} />
+                                        </span>
+                                        <div>
+                                            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{card.front}</h3>
+                                            <p className="text-slate-500 dark:text-slate-400">Interactive Worksheet</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setActiveExamHtml(card.back)}
+                                        className="px-6 py-3 bg-secondary hover:bg-secondary/90 text-white rounded-xl font-bold shadow-lg shadow-secondary/20 transition-all transform hover:scale-105"
+                                    >
+                                        Launch Worksheet
+                                    </button>
+                                    <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleDelete(card.id)}
+                                            className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div key={card.id} className="glass rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-white/5 group relative">
+                                <div className="flex items-start gap-4">
+                                    <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                        {index + 1}
+                                    </span>
+                                    <div className="space-y-4 flex-1">
+                                        <div>
+                                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Question</h4>
+                                            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{card.front}</p>
+                                        </div>
+                                        <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                                            <h4 className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Answer / Explanation</h4>
+                                            <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{card.back}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => startEditing(card)}
+                                        className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20"
+                                        title="Edit"
+                                    >
+                                        <Pencil size={14} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(card.id)}
+                                        className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {flashcards.map((card) => (
-                        <div key={card.id} className="relative group">
-                            <div className="scale-90 hover:scale-100 transition-transform duration-300 relative z-0">
-                                <Flashcard front={card.front} back={card.back} />
-                            </div>
+                    {flashcards.map((card) => {
+                        if (card.type === 'interactive_exam') {
+                            return (
+                                <div key={card.id} className="relative group bg-gradient-to-br from-primary/10 to-secondary/10 rounded-3xl p-6 border border-primary/20 flex flex-col items-center justify-center text-center h-[300px] gap-6 card-shadow">
+                                    <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                                        <FileSpreadsheet size={40} className="text-primary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">{card.front}</h3>
+                                        <p className="text-slate-500 text-sm">Interactive CBT Module</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setActiveExamHtml(card.back)}
+                                        className="px-8 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold shadow-xl shadow-primary/20 transition-all w-full max-w-[200px]"
+                                    >
+                                        Start
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(card.id)}
+                                        className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            );
+                        }
 
-                            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                <button
-                                    onClick={() => startEditing(card)}
-                                    className="p-2 bg-blue-500/20 text-blue-500 rounded-full hover:bg-blue-500/40 backdrop-blur-md"
-                                    title="Edit"
-                                >
-                                    <Pencil size={16} />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(card.id)}
-                                    className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500/40 backdrop-blur-md"
-                                    title="Delete"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
+                        if (card.type === 'interactive_worksheet') {
+                            return (
+                                <div key={card.id} className="relative group bg-gradient-to-br from-secondary/10 to-accent/10 rounded-3xl p-6 border border-secondary/20 flex flex-col items-center justify-center text-center h-[300px] gap-6 card-shadow">
+                                    <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-xl mb-2 group-hover:scale-110 transition-transform duration-300">
+                                        <FileText size={40} className="text-secondary" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">{card.front}</h3>
+                                        <p className="text-slate-500 text-sm">Interactive Worksheet</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setActiveExamHtml(card.back)}
+                                        className="px-8 py-3 bg-secondary hover:bg-secondary/90 text-white rounded-xl font-bold shadow-xl shadow-secondary/20 transition-all w-full max-w-[200px]"
+                                    >
+                                        Start
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(card.id)}
+                                        className="absolute top-4 right-4 p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div key={card.id} className="relative group">
+                                <div className="scale-90 hover:scale-100 transition-transform duration-300 relative z-0">
+                                    <Flashcard front={card.front} back={card.back} />
+                                </div>
+
+                                <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                    <button
+                                        onClick={() => startEditing(card)}
+                                        className="p-2 bg-blue-500/20 text-blue-500 rounded-full hover:bg-blue-500/40 backdrop-blur-md"
+                                        title="Edit"
+                                    >
+                                        <Pencil size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(card.id)}
+                                        className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500/40 backdrop-blur-md"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
+
+            {/* Exam Modal */}
+            <AnimatePresence>
+                {activeExamHtml && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-white dark:bg-slate-900 flex flex-col"
+                    >
+                        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <h2 className="font-bold text-lg text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                                <FileSpreadsheet className="text-primary" /> Interactive Exam Session
+                            </h2>
+                            <button
+                                onClick={() => setActiveExamHtml(null)}
+                                className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-red-500 rounded-lg transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <iframe
+                            srcDoc={activeExamHtml}
+                            className="flex-1 w-full border-none"
+                            title="Interactive Exam"
+                            sandbox="allow-scripts allow-same-origin allow-forms"
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Edit Modal */}
             <AnimatePresence>
@@ -306,6 +457,6 @@ export function LibraryView() {
                     <PrintViewModal onClose={() => setShowPrintModal(false)} />
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }

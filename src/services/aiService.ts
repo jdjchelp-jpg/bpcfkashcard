@@ -61,19 +61,47 @@ Your goal is to create engaging questions that encourage active recall and deep 
 RULES:
 1. **Interactive Style**: Frame questions in a way that feels like a conversation or a puzzle.
 2. **Scaffolded Learning**: Progress from easier to harder questions.
-3. **Detailed Feedback**: In the "back" field, provide not just the answer, but a "Why?" explanation and a follow-up hint.
+3. **Detailed Feedback**: Provide a "Why?" explanation for the answer.
 
-Return ONLY a valid JSON array of objects with "front" and "back" keys.`;
+Return ONLY a valid JSON object with this exact structure:
+{
+  "title": "Worksheet Title",
+  "questions": [
+    {
+      "question": "Question text?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "explanation": "Explanation of why this is correct."
+    }
+  ]
+}`;
     } else if (mode === 'interactive_exam') {
-        systemPrompt = `You are an expert examiner creating an INTERACTIVE diagnostic exam.
-Your goal is to assess student understanding through rigorous questioning combined with immediate pedagogical feedback.
+        systemPrompt = `You are an expert exam creator for a Computer-Based Test (CBT) system.
+Your goal is to create a comprehensive exam with multiple subjects based on the provided content/topic.
 
 RULES:
-1. **Deeper Analysis**: Create questions that require synthesis of multiple concepts.
-2. **Marking Rubric**: In the "back" field, provide a clear rubric (e.g., 1 point for X, 2 points for Y).
-3. **Immediate Correction**: Provide a "Common Pitfall" section in the answer field to help students understand where they might go wrong.
+1. **Structure**: Return a JSON object with a "subjects" array.
+2. **Subjects**: Create 4 distinct subjects related to the topic (e.g., Math, Science, Language, Social Studies - or specific sub-topics if the content is narrow).
+3. **Questions**: Generate 10 high-quality multiple-choice questions per subject.
+4. **Options**: Provide exactly 4 options per question.
+5. **Correct Answer**: Specify the correct option (A, B, C, or D).
 
-Return ONLY a valid JSON array of objects with "front" and "back" keys.`;
+Return ONLY a valid JSON object with this exact structure:
+{
+  "subjects": [
+    {
+      "id": "subject_id",
+      "title": "Subject Name",
+      "questions": [
+        {
+          "question": "Question text?",
+          "options": ["Option A", "Option B", "Option C", "Option D"],
+          "correctAnswer": "A"
+        }
+      ]
+    }
+  ]
+}`;
     }
 
     const userPrompt = `Instruction: ${instruction}\n\nContent: ${content}`;

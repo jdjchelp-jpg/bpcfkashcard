@@ -73,7 +73,65 @@ export function GeneratorView() {
                 mode: genMode as any
             });
 
-            if (response && Array.isArray(response)) {
+            if (genMode === 'interactive_exam') {
+                // Special handling for HTML exams
+                const subjects = response.subjects;
+                if (!subjects || !Array.isArray(subjects)) {
+                    throw new Error("Invalid exam data format from AI");
+                }
+
+                const title = genInstruction.slice(0, 30) || (file ? file.name : genContent.slice(0, 30)) || `New Exam`;
+                // Dynamically import to avoid circular dependency issues if any, or just ensure import is at top
+                const { generateCBTHTML } = await import('@/utils/cbtTemplate');
+                const htmlContent = generateCBTHTML(title, subjects);
+
+                const newSet: StudySet = {
+                    id: crypto.randomUUID(),
+                    title: title,
+                    items: [{
+                        id: crypto.randomUUID(),
+                        front: `Interactive Exam: ${title}`,
+                        back: htmlContent,
+                        type: 'interactive_exam'
+                    }],
+                    createdAt: Date.now()
+                };
+
+                setStudySets([...studySets, newSet]);
+                setActiveSetId(newSet.id);
+                setFlashcards(newSet.items);
+                setGeneratedPreview(newSet.items);
+
+            } else if (genMode === 'interactive_worksheet') {
+                // Special handling for HTML worksheets
+                const questions = response.questions;
+                if (!questions || !Array.isArray(questions)) {
+                    throw new Error("Invalid worksheet data format from AI");
+                }
+
+                const title = response.title || genInstruction.slice(0, 30) || `New Worksheet`;
+                const { generateWorksheetHTML } = await import('@/utils/worksheetTemplate');
+                const htmlContent = generateWorksheetHTML(title, questions);
+
+                const newSet: StudySet = {
+                    id: crypto.randomUUID(),
+                    title: title,
+                    items: [{
+                        id: crypto.randomUUID(),
+                        front: `Worksheet: ${title}`,
+                        back: htmlContent,
+                        type: 'interactive_worksheet'
+                    }],
+                    createdAt: Date.now()
+                };
+
+                setStudySets([...studySets, newSet]);
+                setActiveSetId(newSet.id);
+                setFlashcards(newSet.items);
+                setGeneratedPreview(newSet.items);
+
+            } else if (response && Array.isArray(response)) {
+                // Standard Flashcards / Worksheet handling
                 const itemsWithIds = response.map((item: any) => ({
                     ...item,
                     id: crypto.randomUUID(),
