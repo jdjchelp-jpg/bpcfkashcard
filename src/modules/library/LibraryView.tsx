@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '@/context/StoreContext';
 import { Flashcard } from '@/components/flashcard/Flashcard';
-import { BookOpen, Download, Trash2, Pencil, X, Save, Printer, FileText, FileSpreadsheet } from 'lucide-react';
+import { BookOpen, Download, Trash2, Pencil, X, Save, Printer, FileText, FileSpreadsheet, LayoutGrid } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportToExcel, exportToPDF, exportToWord, exportToJSON } from '@/utils/exportUtils';
 import { parseJSONImport, parseExcelImport } from '@/utils/importUtils';
@@ -10,9 +10,8 @@ import { PrintViewModal } from './PrintViewModal';
 export function LibraryView() {
     const { flashcards, setFlashcards, studySets, activeSetId } = useStore();
     const activeSet = studySets.find(s => s.id === activeSetId);
-    const isDocumentView = activeSet?.items?.[0]?.type?.includes('worksheet') || activeSet?.items?.[0]?.type?.includes('exam');
-
     const [editingCardId, setEditingCardId] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'document'>('grid');
     const [editFront, setEditFront] = useState('');
     const [editBack, setEditBack] = useState('');
     const [showPrintModal, setShowPrintModal] = useState(false);
@@ -52,6 +51,7 @@ export function LibraryView() {
         const filename = `${activeSet.title.replace(/\s+/g, '_')}_${type}.pdf`;
         exportToPDF(flashcards, filename, type);
     };
+
 
     const handleDelete = (id: string) => {
         if (confirm('Are you sure you want to delete this card?')) {
@@ -94,19 +94,32 @@ export function LibraryView() {
         <div className="space-y-8 pb-20 relative">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-3">
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                         {activeSet ? activeSet.title : 'Your Library'}
-                        {isDocumentView && (
-                            <span className="px-2 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-md border border-primary/20">
-                                Document Mode
-                            </span>
-                        )}
                     </h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">
                         {flashcards.length} items in {activeSet ? 'this set' : 'deck'}
                     </p>
                 </div>
                 <div className="flex gap-2 relative">
+                    {/* View Toggle */}
+                    <div className="flex bg-slate-100 dark:bg-slate-900/50 rounded-lg p-1 border border-slate-200 dark:border-slate-700 shadow-inner mr-2">
+                        <button
+                            onClick={() => setViewMode('grid')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            title="Grid View"
+                        >
+                            <LayoutGrid size={18} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('document')}
+                            className={`p-1.5 rounded-md transition-all ${viewMode === 'document' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                            title="Reader Mode"
+                        >
+                            <FileText size={18} />
+                        </button>
+                    </div>
+
                     <label className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm cursor-pointer">
                         <Download size={16} className="rotate-180" /> Import
                         <input type="file" className="hidden" accept=".json,.xlsx,.xls,.csv" onChange={handleImport} />
@@ -162,7 +175,7 @@ export function LibraryView() {
                 </div>
             </header>
 
-            {isDocumentView ? (
+            {viewMode === 'document' ? (
                 <div className="max-w-4xl mx-auto space-y-6">
                     {flashcards.map((card, index) => (
                         <div key={card.id} className="glass rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-white/5 group relative">
@@ -182,7 +195,6 @@ export function LibraryView() {
                                 </div>
                             </div>
 
-                            {/* Actions overlay moved inside the document card */}
                             <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={() => startEditing(card)}
