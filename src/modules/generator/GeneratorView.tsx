@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle, Globe, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flashcard } from '@/components/flashcard/Flashcard';
 import { useStore, StudySet } from '@/context/StoreContext';
-import { generateCompletion, GenerationMode } from '@/services/aiService';
+import { generateCompletion } from '@/services/aiService';
 import { parseFile } from '@/utils/fileParser';
 
 export function GeneratorView() {
@@ -11,14 +11,16 @@ export function GeneratorView() {
         openRouterKey, poeKey, preferredProvider, setPreferredProvider,
         openRouterModel, poeModel,
         setFlashcards, setIsGenerating, isGenerating, maxUploadSize,
-        studySets, setStudySets, setActiveSetId
+        studySets, setStudySets, setActiveSetId,
+        genInstruction, setGenInstruction,
+        genContent, setGenContent,
+        genMode, setGenMode,
+        genInputMode, setGenInputMode
     } = useStore();
 
-    const [instruction, setInstruction] = useState('');
-    const [content, setContent] = useState('');
     const [file, setFile] = useState<File | null>(null);
-    const [activeInputMode, setActiveInputMode] = useState<'text' | 'file'>('text');
-    const [mode, setMode] = useState<GenerationMode>('flashcards');
+    const [websiteUrl, setWebsiteUrl] = useState('');
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [generatedPreview, setGeneratedPreview] = useState<any[]>([]);
 
@@ -49,43 +51,47 @@ export function GeneratorView() {
         setGeneratedPreview([]);
 
         try {
-            let sourceText = content;
-            if (activeInputMode === 'file' && file) {
+            let sourceText = genContent;
+            if (genInputMode === 'file' && file) {
                 sourceText = await parseFile(file);
+            } else if (genInputMode === 'website' && websiteUrl) {
+                sourceText = `Content from website: ${websiteUrl}. (In a real app, we would fetch and scrape this URL).`;
+            } else if (genInputMode === 'image' && imageFile) {
+                sourceText = `Content from image: ${imageFile.name}. (In a real app, we would use Vision AI to extract text).`;
             }
 
-            if (!sourceText && !instruction) {
+            if (!sourceText && !genInstruction) {
                 throw new Error("Please provide some content or instructions.");
             }
 
             const response = await generateCompletion({
-                instruction,
+                instruction: genInstruction,
                 content: sourceText.slice(0, 15000),
                 provider: preferredProvider,
                 model,
                 apiKey,
-                mode
+                mode: genMode as any
             });
 
             if (response && Array.isArray(response)) {
-                const cardsWithIds = response.map((card: any) => ({
-                    ...card,
+                const itemsWithIds = response.map((item: any) => ({
+                    ...item,
                     id: crypto.randomUUID(),
-                    type: mode
+                    type: genMode
                 }));
 
                 // Create a new Study Set
                 const newSet: StudySet = {
                     id: crypto.randomUUID(),
-                    title: instruction.slice(0, 30) || (file ? file.name : content.slice(0, 30)) || `New ${mode}`,
-                    items: cardsWithIds,
+                    title: genInstruction.slice(0, 30) || (file ? file.name : genContent.slice(0, 30)) || `New ${genMode}`,
+                    items: itemsWithIds,
                     createdAt: Date.now()
                 };
 
                 setStudySets([...studySets, newSet]);
                 setActiveSetId(newSet.id);
-                setFlashcards(cardsWithIds);
-                setGeneratedPreview(cardsWithIds);
+                setFlashcards(itemsWithIds);
+                setGeneratedPreview(itemsWithIds);
             } else {
                 throw new Error("Invalid response format from AI");
             }
@@ -141,8 +147,8 @@ export function GeneratorView() {
                         <span className="font-black text-xs uppercase tracking-[0.2em]">Instructions</span>
                     </div>
                     <textarea
-                        value={instruction}
-                        onChange={(e) => setInstruction(e.target.value)}
+                        value={genInstruction}
+                        onChange={(e) => setGenInstruction(e.target.value)}
                         placeholder="e.g. 'Create 10 definition cards', 'Summarize key points', 'Make Q&A for exam prep'"
                         className="w-full bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-slate-900 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-4 focus:ring-primary/20 resize-none h-32 transition-all relative z-10 font-medium"
                     />
@@ -156,35 +162,33 @@ export function GeneratorView() {
                             <span className="font-black text-xs uppercase tracking-[0.2em]">Source Material</span>
                         </div>
                         <div className="flex bg-slate-100 dark:bg-slate-950/50 rounded-xl p-1 border border-slate-200 dark:border-white/5 shadow-inner">
-                            <button
-                                onClick={() => setActiveInputMode('text')}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${activeInputMode === 'text' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-400'}`}
-                            >
-                                Text
-                            </button>
-                            <button
-                                onClick={() => setActiveInputMode('file')}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${activeInputMode === 'file' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-400'}`}
-                            >
-                                File
-                            </button>
+                            {(['text', 'file', 'website', 'image'] as const).map((m) => (
+                                <button
+                                    key={m}
+                                    onClick={() => setGenInputMode(m)}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all uppercase tracking-widest ${genInputMode === m ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-400'}`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
                     <div className="flex-1 relative h-full">
                         <AnimatePresence mode="wait">
-                            {activeInputMode === 'text' ? (
+                            {genInputMode === 'text' && (
                                 <motion.textarea
                                     key="text-input"
                                     initial={{ opacity: 0, scale: 0.98 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.98 }}
-                                    value={content}
-                                    onChange={(e) => setContent(e.target.value)}
+                                    value={genContent}
+                                    onChange={(e) => setGenContent(e.target.value)}
                                     placeholder="Paste your notes, article, or raw text here..."
                                     className="w-full h-full min-h-[200px] bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-900 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-secondary/50 resize-none"
                                 />
-                            ) : (
+                            )}
+                            {genInputMode === 'file' && (
                                 <motion.div
                                     key="file-input"
                                     initial={{ opacity: 0, scale: 0.98 }}
@@ -223,6 +227,60 @@ export function GeneratorView() {
                                     )}
                                 </motion.div>
                             )}
+                            {genInputMode === 'website' && (
+                                <motion.div
+                                    key="website-input"
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    className="w-full h-full min-h-[200px] flex flex-col items-center justify-center p-6 gap-4"
+                                >
+                                    <Globe size={48} className="text-secondary opacity-50" />
+                                    <input
+                                        type="url"
+                                        value={websiteUrl}
+                                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                                        placeholder="https://example.com/article"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-slate-900 dark:text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                                    />
+                                    <p className="text-xs text-slate-500 text-center">Enter a URL to summarize and extract study material from.</p>
+                                </motion.div>
+                            )}
+                            {genInputMode === 'image' && (
+                                <motion.div
+                                    key="image-input"
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    className="w-full h-full min-h-[200px] border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-secondary/50 bg-slate-50 dark:bg-slate-950/30 rounded-xl flex flex-col items-center justify-center text-slate-400 transition-colors cursor-pointer relative group"
+                                >
+                                    <input
+                                        type="file"
+                                        onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        accept="image/*"
+                                    />
+                                    {imageFile ? (
+                                        <div className="flex flex-col items-center gap-2 p-4 text-slate-900 dark:text-slate-200">
+                                            <ImageIcon size={48} className="text-secondary" />
+                                            <span className="font-medium text-lg">{imageFile.name}</span>
+                                            <button
+                                                onClick={(e) => { e.preventDefault(); setImageFile(null); }}
+                                                className="mt-2 px-3 py-1 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 text-xs font-bold uppercase tracking-wide z-10"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="p-4 bg-slate-100 dark:bg-slate-900 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">
+                                                <ImageIcon size={32} className="text-secondary" />
+                                            </div>
+                                            <p className="font-medium text-lg text-slate-700 dark:text-slate-300">Upload Image / Photo of Notes</p>
+                                        </>
+                                    )}
+                                </motion.div>
+                            )}
                         </AnimatePresence>
                     </div>
                 </div>
@@ -233,14 +291,14 @@ export function GeneratorView() {
                         <Sparkles size={18} />
                         <span className="font-black text-xs uppercase tracking-[0.2em]">Generation Mode</span>
                     </div>
-                    <div className="flex bg-slate-100 dark:bg-slate-950/50 rounded-xl p-1 border border-slate-200 dark:border-white/5 shadow-inner relative z-10">
-                        {(['flashcards', 'worksheet', 'exam'] as const).map((m) => (
+                    <div className="flex flex-wrap bg-slate-100 dark:bg-slate-950/50 rounded-xl p-1 border border-slate-200 dark:border-white/5 shadow-inner relative z-10 gap-1">
+                        {(['flashcards', 'worksheet', 'exam', 'interactive_worksheet', 'interactive_exam'] as const).map((m) => (
                             <button
                                 key={m}
-                                onClick={() => setMode(m)}
-                                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-widest ${mode === m ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-400'}`}
+                                onClick={() => setGenMode(m)}
+                                className={`flex-1 min-w-[120px] py-2 rounded-lg text-[10px] font-bold transition-all uppercase tracking-widest ${genMode === m ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-md' : 'text-slate-500 hover:text-slate-400'}`}
                             >
-                                {m}
+                                {m.replace('_', ' ')}
                             </button>
                         ))}
                     </div>

@@ -10,6 +10,7 @@ import { PrintViewModal } from './PrintViewModal';
 export function LibraryView() {
     const { flashcards, setFlashcards, studySets, activeSetId } = useStore();
     const activeSet = studySets.find(s => s.id === activeSetId);
+    const isDocumentView = activeSet?.items?.[0]?.type?.includes('worksheet') || activeSet?.items?.[0]?.type?.includes('exam');
 
     const [editingCardId, setEditingCardId] = useState<string | null>(null);
     const [editFront, setEditFront] = useState('');
@@ -43,6 +44,13 @@ export function LibraryView() {
         } finally {
             e.target.value = '';
         }
+    };
+
+    const handleQuickExportPDF = () => {
+        if (!activeSet) return;
+        const type = activeSet.items[0]?.type || 'flashcards';
+        const filename = `${activeSet.title.replace(/\s+/g, '_')}_${type}.pdf`;
+        exportToPDF(flashcards, filename, type);
     };
 
     const handleDelete = (id: string) => {
@@ -86,18 +94,25 @@ export function LibraryView() {
         <div className="space-y-8 pb-20 relative">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-3">
                         {activeSet ? activeSet.title : 'Your Library'}
+                        {isDocumentView && (
+                            <span className="px-2 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-md border border-primary/20">
+                                Document Mode
+                            </span>
+                        )}
                     </h2>
                     <p className="text-slate-500 dark:text-slate-400 mt-2">
                         {flashcards.length} items in {activeSet ? 'this set' : 'deck'}
                     </p>
                 </div>
                 <div className="flex gap-2 relative">
-                    <label className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm cursor-pointer">
-                        <Download size={16} className="rotate-180" /> Import
-                        <input type="file" className="hidden" accept=".json,.xlsx,.xls,.csv" onChange={handleImport} />
-                    </label>
+                    <button
+                        onClick={handleQuickExportPDF}
+                        className="px-4 py-2 bg-red-500/10 text-red-600 hover:bg-red-500/20 rounded-lg text-sm font-bold flex items-center gap-2 border border-red-500/20 transition-all shadow-sm"
+                    >
+                        <Download size={16} /> PDF
+                    </button>
                     <button
                         onClick={() => setShowPrintModal(true)}
                         className="px-4 py-2 bg-bgSurface hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium flex items-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors shadow-sm"
@@ -126,7 +141,11 @@ export function LibraryView() {
                                     <button onClick={() => { exportToExcel(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                                         <FileSpreadsheet size={16} className="text-green-500" /> Excel (.xlsx)
                                     </button>
-                                    <button onClick={() => { exportToPDF(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                                    <button onClick={() => {
+                                        const type = activeSet?.items[0]?.type || 'flashcards';
+                                        exportToPDF(flashcards, `export_${type}.pdf`, type);
+                                        setShowExportMenu(false);
+                                    }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                                         <FileText size={16} className="text-red-500" /> PDF (.pdf)
                                     </button>
                                     <button onClick={() => { exportToWord(flashcards); setShowExportMenu(false); }} className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
@@ -139,33 +158,74 @@ export function LibraryView() {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {flashcards.map((card) => (
-                    <div key={card.id} className="relative group">
-                        <div className="scale-90 hover:scale-100 transition-transform duration-300 relative z-0">
-                            <Flashcard front={card.front} back={card.back} />
-                        </div>
+            {isDocumentView ? (
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {flashcards.map((card, index) => (
+                        <div key={card.id} className="glass rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-white/5 group relative">
+                            <div className="flex items-start gap-4">
+                                <span className="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                    {index + 1}
+                                </span>
+                                <div className="space-y-4 flex-1">
+                                    <div>
+                                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Question</h4>
+                                        <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{card.front}</p>
+                                    </div>
+                                    <div className="pt-4 border-t border-slate-100 dark:border-white/5">
+                                        <h4 className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Answer / Explanation</h4>
+                                        <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{card.back}</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                        {/* Edit/Delete Overlay - Visible on Hover */}
-                        <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                            <button
-                                onClick={() => startEditing(card)}
-                                className="p-2 bg-blue-500/20 text-blue-500 rounded-full hover:bg-blue-500/40 backdrop-blur-md"
-                                title="Edit"
-                            >
-                                <Pencil size={16} />
-                            </button>
-                            <button
-                                onClick={() => handleDelete(card.id)}
-                                className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500/40 backdrop-blur-md"
-                                title="Delete"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            {/* Actions overlay moved inside the document card */}
+                            <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={() => startEditing(card)}
+                                    className="p-2 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20"
+                                    title="Edit"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(card.id)}
+                                    className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {flashcards.map((card) => (
+                        <div key={card.id} className="relative group">
+                            <div className="scale-90 hover:scale-100 transition-transform duration-300 relative z-0">
+                                <Flashcard front={card.front} back={card.back} />
+                            </div>
+
+                            <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                                <button
+                                    onClick={() => startEditing(card)}
+                                    className="p-2 bg-blue-500/20 text-blue-500 rounded-full hover:bg-blue-500/40 backdrop-blur-md"
+                                    title="Edit"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(card.id)}
+                                    className="p-2 bg-red-500/20 text-red-500 rounded-full hover:bg-red-500/40 backdrop-blur-md"
+                                    title="Delete"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Edit Modal */}
             <AnimatePresence>

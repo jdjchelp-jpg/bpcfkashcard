@@ -3,13 +3,10 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { Layout } from '@/components/layout/Layout'
 import { GeneratorView } from '@/modules/generator/GeneratorView'
 import { LibraryView } from '@/modules/library/LibraryView'
-import { VideoView } from '@/modules/video/VideoView'
-import { SettingsView } from '@/modules/settings/SettingsView'
-
 import { CatalogView } from '@/modules/library/CatalogView'
-
+import { SettingsView } from '@/modules/settings/SettingsView'
 function App() {
-    const [activeTab, setActiveTab] = useState<'create' | 'catalog' | 'library' | 'video' | 'settings'>('create')
+    const [activeTab, setActiveTab] = useState<'create' | 'catalog' | 'library' | 'settings'>('create')
 
     return (
         <div className="min-h-screen bg-bgApp text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -38,10 +35,6 @@ function App() {
 
                 {activeTab === 'library' && (
                     <LibraryView />
-                )}
-
-                {activeTab === 'video' && (
-                    <VideoView />
                 )}
 
                 {activeTab === 'settings' && (

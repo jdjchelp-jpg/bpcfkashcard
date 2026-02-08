@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
-import { Sparkles, BookOpen, Settings, Video, Crown, LayoutGrid } from 'lucide-react';
+import { Sparkles, BookOpen, Settings, Crown, LayoutGrid } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 
 interface SidebarProps {
-    activeTab: 'create' | 'catalog' | 'library' | 'video' | 'settings';
-    onTabChange: (tab: 'create' | 'catalog' | 'library' | 'video' | 'settings') => void;
+    activeTab: 'create' | 'catalog' | 'library' | 'settings';
+    onTabChange: (tab: 'create' | 'catalog' | 'library' | 'settings') => void;
 }
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -14,7 +14,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         { id: 'create', icon: Sparkles, label: 'Create' },
         { id: 'catalog', icon: LayoutGrid, label: 'Catalog' },
         { id: 'library', icon: BookOpen, label: 'Library' },
-        { id: 'video', icon: Video, label: 'Video' },
         { id: 'settings', icon: Settings, label: 'Settings' },
     ] as const;
 
@@ -34,12 +33,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                     <button
                         key={item.id}
                         onClick={() => onTabChange(item.id)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 relative group
+                        className={`w - full flex items - center gap - 3 p - 3 rounded - xl transition - all duration - 200 relative group
                   ${activeTab === item.id
                                 ? 'text-primary bg-primary/10 font-bold'
                                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                             }
-               `}
+`}
                     >
                         {activeTab === item.id && (
                             <motion.div

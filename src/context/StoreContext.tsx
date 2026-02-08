@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Theme, themes } from '@/utils/themes';
 
-export type ItemType = 'flashcards' | 'worksheet' | 'exam';
+export type ItemType = 'flashcards' | 'worksheet' | 'exam' | 'interactive_worksheet' | 'interactive_exam';
 
 export interface FlashcardData {
     id: string;
@@ -43,6 +43,15 @@ interface StoreContextType {
     isPaid: boolean;
     setIsPaid: (val: boolean) => void;
     maxUploadSize: number;
+    // Generator states for persistence
+    genInstruction: string;
+    setGenInstruction: (val: string) => void;
+    genContent: string;
+    setGenContent: (val: string) => void;
+    genMode: string;
+    setGenMode: (val: any) => void;
+    genInputMode: 'text' | 'file' | 'website' | 'image';
+    setGenInputMode: (val: 'text' | 'file' | 'website' | 'image') => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -92,6 +101,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const savedThemeId = localStorage.getItem('themeId');
         return themes.find(t => t.id === savedThemeId) || themes.find(t => t.id === 'classic') || themes[0];
     });
+
+    // Generator States for Persistence
+    const [genInstruction, setGenInstructionState] = useState(() => localStorage.getItem('genInstruction') || '');
+    const [genContent, setGenContentState] = useState(() => localStorage.getItem('genContent') || '');
+    const [genMode, setGenModeState] = useState(() => localStorage.getItem('genMode') || 'flashcards');
+    const [genInputMode, setGenInputModeState] = useState<'text' | 'file' | 'website' | 'image'>(() => (localStorage.getItem('genInputMode') as 'text' | 'file' | 'website' | 'image') || 'text');
+
+    const setGenInstruction = (val: string) => {
+        setGenInstructionState(val);
+        localStorage.setItem('genInstruction', val);
+    };
+
+    const setGenContent = (val: string) => {
+        setGenContentState(val);
+        localStorage.setItem('genContent', val);
+    };
+
+    const setGenMode = (val: string) => {
+        setGenModeState(val);
+        localStorage.setItem('genMode', val);
+    };
+
+    const setGenInputMode = (val: 'text' | 'file' | 'website' | 'image') => {
+        setGenInputModeState(val);
+        localStorage.setItem('genInputMode', val);
+    };
 
     const setOpenRouterKey = (key: string) => {
         setOpenRouterKeyState(key);
@@ -215,7 +250,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             setTheme,
             isPaid,
             setIsPaid,
-            maxUploadSize
+            maxUploadSize,
+            genInstruction,
+            setGenInstruction,
+            genContent,
+            setGenContent,
+            genMode,
+            setGenMode,
+            genInputMode,
+            setGenInputMode
         }}>
             {children}
         </StoreContext.Provider>

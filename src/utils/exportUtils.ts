@@ -30,84 +30,98 @@ export const exportToJSON = (flashcards: FlashcardData[], filename = 'flashcards
 /**
  * Export to PDF (.pdf) - Clean layout
  */
-export const exportToPDF = (flashcards: FlashcardData[], filename = 'flashcards.pdf') => {
+export const exportToPDF = (items: any[], filename = 'study-set.pdf', type: string = 'flashcards') => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 20;
     const contentWidth = pageWidth - (margin * 2);
 
+    let title = "Study Set";
+    if (type === 'flashcards') title = "Flashcards Study Set";
+    else if (type.includes('worksheet')) title = "Educational Worksheet";
+    else if (type.includes('exam')) title = "Practice Exam / Study Guide";
+
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(24);
+    doc.setFontSize(22);
     doc.setTextColor(30, 41, 59); // slate-800
-    doc.text("Flashcards Study Set", margin, 25);
+    doc.text(title, margin, 25);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(148, 163, 184); // slate-400
+    doc.text(`Generated on ${new Date().toLocaleDateString()}`, margin, 32);
 
     doc.setDrawColor(226, 232, 240); // slate-200
-    doc.line(margin, 30, pageWidth - margin, 30);
+    doc.line(margin, 35, pageWidth - margin, 35);
 
-    let y = 45;
+    let y = 50;
 
-    flashcards.forEach((card) => {
-        // Calculate heights
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        const questionLabel = "QUESTION";
-
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(14);
-        const questionLines = doc.splitTextToSize(card.front, contentWidth - 10);
-        const questionHeight = (questionLines.length * 7) + 5;
+    items.forEach((item, index) => {
+        const itemNumber = index + 1;
+        const qLabel = type === 'flashcards' ? "QUESTION" : `QUESTION ${itemNumber}`;
+        const aLabel = type === 'flashcards' ? "ANSWER" : "EXPLANATION / ANSWER";
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        const answerLabel = "ANSWER";
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139); // slate-500
+        const qTitleText = qLabel;
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13);
+        const qLines = doc.splitTextToSize(item.front, contentWidth - 10);
+        const qHeight = (qLines.length * 7) + 10;
 
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(12);
-        const answerLines = doc.splitTextToSize(card.back, contentWidth - 10);
-        const answerHeight = (answerLines.length * 6) + 5;
+        doc.setFontSize(11);
+        const aLines = doc.splitTextToSize(item.back, contentWidth - 10);
+        const aHeight = (aLines.length * 6) + 10;
 
-        const totalCardHeight = questionHeight + answerHeight + 25;
+        const totalItemHeight = qHeight + aHeight + 15;
 
-        // Check for page break
-        if (y + totalCardHeight > 270) {
+        // Page break check
+        if (y + totalItemHeight > 270) {
             doc.addPage();
             y = 25;
         }
 
-        // Card Box
-        doc.setDrawColor(241, 245, 249); // slate-100
-        doc.setFillColor(248, 250, 252); // slate-50
-        doc.roundedRect(margin - 2, y - 5, contentWidth + 4, totalCardHeight, 3, 3, 'FD');
+        // Draw Item Container (Subtle for documents, boxed for flashcards)
+        if (type === 'flashcards') {
+            doc.setDrawColor(241, 245, 249);
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(margin - 2, y - 5, contentWidth + 4, totalItemHeight, 3, 3, 'FD');
+        }
 
-        // Question
+        // Question header
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184); // slate-400
-        doc.text(questionLabel, margin + 2, y + 2);
+        doc.setTextColor(type === 'flashcards' ? 148 : 37, type === 'flashcards' ? 163 : 99, type === 'flashcards' ? 184 : 235); // colored label for docs
+        doc.text(qTitleText, margin + 2, y + 2);
 
+        // Question text
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(13);
+        doc.setFontSize(12);
         doc.setTextColor(15, 23, 42); // slate-900
-        doc.text(questionLines, margin + 2, y + 10);
+        doc.text(qLines, margin + 2, y + 10);
 
-        y += questionHeight + 8;
+        y += qHeight + 5;
 
         // Divider
         doc.setDrawColor(226, 232, 240);
         doc.line(margin + 2, y - 2, pageWidth - margin - 2, y - 2);
 
-        // Answer
+        // Answer header
         doc.setFont("helvetica", "bold");
         doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.text(answerLabel, margin + 2, y + 5);
+        doc.setTextColor(100, 116, 139);
+        doc.text(aLabel, margin + 2, y + 4);
 
+        // Answer text
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(11);
+        doc.setFontSize(10);
         doc.setTextColor(51, 65, 85); // slate-700
-        doc.text(answerLines, margin + 2, y + 12);
+        doc.text(aLines, margin + 2, y + 11);
 
-        y += answerHeight + 15;
+        y += aHeight + 15;
     });
 
     doc.save(filename);
