@@ -184,3 +184,31 @@ export const exportToWord = async (flashcards: FlashcardData[], filename = 'flas
     const blob = await Packer.toBlob(doc);
     saveAs(blob, filename);
 };
+
+/**
+ * Export to CSV (.csv)
+ */
+export const exportToCSV = (flashcards: any[], filename = 'flashcards.csv') => {
+    const headers = ['Front', 'Back'];
+    const rows = flashcards.map(c => [
+        `"${(c.front || '').replace(/"/g, '""')}"`,
+        `"${(c.back || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [
+        headers.join(','),
+        ...rows.map(r => r.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, filename);
+};
+
+/**
+ * Export to Plain Text (.txt) - Front / Back format
+ */
+export const exportToText = (flashcards: any[], filename = 'flashcards.txt') => {
+    const textContent = flashcards.map(c => `${c.front}\n${c.back}`).join('\n\n---\n\n');
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8;' });
+    saveAs(blob, filename);
+};

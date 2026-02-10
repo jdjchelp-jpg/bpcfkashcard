@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle, Globe, Image as ImageIcon } from 'lucide-react';
+import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle, Globe, Image as ImageIcon, Download, FileSpreadsheet, FileJson, FileType } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flashcard } from '@/components/flashcard/Flashcard';
 import { useStore, StudySet } from '@/context/StoreContext';
 import { generateCompletion } from '@/services/aiService';
 import { parseFile } from '@/utils/fileParser';
+import { exportToExcel, exportToWord, exportToCSV, exportToPDF, exportToText } from '@/utils/exportUtils';
 
 export function GeneratorView() {
     const {
@@ -412,11 +413,44 @@ export function GeneratorView() {
                                 back={generatedPreview[0].back}
                             />
                         </div>
-                        <div className="mt-8 text-center bg-slate-100 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-white/5 backdrop-blur-md">
-                            <p className="text-green-600 dark:text-green-400 text-sm font-bold flex items-center justify-center gap-2">
-                                <Sparkles size={14} /> Success!
+                        <div className="mt-8 text-center bg-slate-100 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-white/5 backdrop-blur-md w-full">
+                            <p className="text-green-600 dark:text-green-400 text-sm font-bold flex items-center justify-center gap-2 mb-3">
+                                <Sparkles size={14} /> {generatedPreview.length} Items Generated!
                             </p>
-                            <p className="text-slate-500 text-xs mt-1">Go to Library to view all cards</p>
+
+                            <div className="flex flex-wrap justify-center gap-2">
+                                <button
+                                    onClick={() => exportToExcel(generatedPreview, `export-${Date.now()}.xlsx`)}
+                                    className="px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-green-500/20"
+                                >
+                                    <FileSpreadsheet size={14} /> Excel
+                                </button>
+                                <button
+                                    onClick={() => exportToWord(generatedPreview, `export-${Date.now()}.docx`)}
+                                    className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-blue-500/20"
+                                >
+                                    <FileText size={14} /> Word
+                                </button>
+                                <button
+                                    onClick={() => exportToCSV(generatedPreview, `export-${Date.now()}.csv`)}
+                                    className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-amber-500/20"
+                                >
+                                    <FileType size={14} /> CSV
+                                </button>
+                                <button
+                                    onClick={() => exportToPDF(generatedPreview, `export-${Date.now()}.pdf`, genMode)}
+                                    className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-red-500/20"
+                                >
+                                    <Download size={14} /> PDF
+                                </button>
+                                <button
+                                    onClick={() => exportToText(generatedPreview, `export-${Date.now()}.txt`)}
+                                    className="px-3 py-1.5 bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-400 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border border-slate-500/20"
+                                >
+                                    <FileText size={14} /> Text
+                                </button>
+                            </div>
+                            <p className="text-slate-500 text-[10px] mt-3">All items also saved to your Library</p>
                         </div>
                     </div>
                 ) : (
