@@ -12,28 +12,53 @@ export interface GenerationParams {
   model: string;
   apiKey: string;
   mode?: GenerationMode | string;
+  onProgress?: (current: number, total: number) => void;
 }
 
-export async function generateCompletion({ instruction, content, provider, model, apiKey, mode = 'flashcards' }: GenerationParams) {
+// Helper to chunk content intelligently
+function chunkContent(text: string, maxChunkSize: number = 4000): string[] {
+  if (text.length <= maxChunkSize) return [text];
+
+  const chunks: string[] = [];
+  let currentChunk = '';
+  const sentences = text.match(/[^.!?]+[.!?]+(\s+|$)/g) || [text];
+
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length > maxChunkSize) {
+      if (currentChunk.trim()) chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      currentChunk += sentence;
+    }
+  }
+  if (currentChunk.trim()) chunks.push(currentChunk.trim());
+  return chunks;
+}
+
+export async function generateCompletion({ instruction, content, provider, model, apiKey, mode = 'flashcards', onProgress }: GenerationParams) {
   const url = provider === 'openrouter' ? OPENROUTER_URL : POE_URL;
 
+  // Determine system prompt based on mode
   let systemPrompt = '';
 
+  // Modes that return an Array and can be batched
+  const isArrayMode = ['flashcards', 'worksheet', 'exam'].includes(mode);
+
   if (mode === 'flashcards') {
-    systemPrompt = `You are an expert educational psychologist and flashcard creator. 
+    systemPrompt = `You are an expert educational psychologist and flashcard creator.
 Your goal is to transform complex information into clear, effective flashcards following the Minimum Information Principle.
 
 RULES FOR FLASHCARD CREATION:
 1. **Conciseness**: Keep cards short. One concept per card.
 2. **Clarity**: Use simple language. Avoid ambiguity.
-3. **Bold Key Terms**: Use double asterisks **like this** to highlight the most important terms or answers in the back of the card.
-4. **Accuracy**: Ensure every card is factually correct based on the source material.
-5. **Formatting**: Use real newlines or standard JSON-escaped newlines (\\n) for multi-step processes.
+3. **High Density**: Extract as many discrete facts as possible. Do not skip details. Aim for total coverage.
+4. **Bold Key Terms**: Use double asterisks **like this** to highlight the most important terms or answers in the back of the card.
+5. **Accuracy**: Ensure every card is factually correct based on the source material.
+6. **Formatting**: Use real newlines or standard JSON-escaped newlines (\\n) for multi-step processes.
 
-Return ONLY a valid JSON array of objects with "front" and "back" keys. Do not wrap in markdown code blocks.
-Example: [{"front": "What is the powerhouse of the cell?", "back": "The **Mitochondria**."}]`;
+Return ONLY a valid JSON array of objects with "front" and "back" keys. Do not wrap in markdown code blocks.`;
   } else if (mode === 'worksheet') {
-    systemPrompt = `You are an expert educator creating a student worksheet. 
+    systemPrompt = `You are an expert educator creating a student worksheet.
 Your goal is to create high-quality open-ended or fill-in-the-blank questions based on the content.
 
 RULES FOR WORKSHEET CREATION:
@@ -44,7 +69,7 @@ RULES FOR WORKSHEET CREATION:
 
 Return ONLY a valid JSON array of objects with "front" and "back" keys. Do not wrap in markdown code blocks.`;
   } else if (mode === 'exam') {
-    systemPrompt = `You are an expert examiner creating a formal test. 
+    systemPrompt = `You are an expert examiner creating a formal test.
 Your goal is to create challenging, clear exam questions.
 
 RULES FOR EXAM CREATION:
@@ -106,61 +131,107 @@ Return ONLY a valid JSON object with this exact structure:
 Do not wrap in markdown code blocks.`;
   }
 
-  const userPrompt = `Instruction: ${instruction}\n\nContent: ${content}`;
+  // Determine how to process
+  let contentChunks = [content];
 
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://bpcfkashcard.vercel.app/",
-        "X-Title": "bpcFkashcard",
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" }
-      }),
-    });
+  // Only chunk if it's an Array mode and content is long (> 2000 chars)
+  // Reducing chunk size to ~2000 chars and asking for high density helps reach the 1000+ cards goal.
+  if (isArrayMode && content.length > 2000) {
+    contentChunks = chunkContent(content, 2000);
+  }
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || `API error: ${response.status}`);
+  const allResults: any[] = [];
+
+  for (let i = 0; i < contentChunks.length; i++) {
+    const chunk = contentChunks[i];
+
+    // Notify progress
+    if (onProgress && contentChunks.length > 1) {
+      onProgress(i + 1, contentChunks.length);
     }
 
-    const data = await response.json();
-    const result = data.choices[0].message.content;
+    const userPrompt = `Instruction: ${instruction}\n\nContent (Part ${i + 1}/${contentChunks.length}): ${chunk}`;
 
-    // Handle potential extra formatting from AI
-    let cleanResult = result.trim();
-
-    // Remove markdown code blocks if present
-    if (cleanResult.startsWith('```')) {
-      cleanResult = cleanResult.replace(/^```(json)?\n?/, '').replace(/```$/, '').trim();
-    }
-
-    // Attempt to parse the cleaned result
     try {
-      return JSON.parse(cleanResult);
-    } catch (e) {
-      // If direct parsing fails, try to find the JSON structure
-      const jsonMatch = cleanResult.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-      if (jsonMatch) {
-        try {
-          return JSON.parse(jsonMatch[0]);
-        } catch (e2) {
-          console.error("Failed to parse extracted JSON:", e2);
-          throw new Error("Invalid response format from AI");
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://bpcfkashcard.vercel.app/",
+          "X-Title": "bpcFkashcard",
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" }
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const result = data.choices[0].message.content;
+
+      // Handle potential extra formatting from AI
+      let cleanResult = result.trim();
+
+      // Remove markdown code blocks if present
+      if (cleanResult.startsWith('```')) {
+        cleanResult = cleanResult.replace(/^```(json)?\n?/, '').replace(/```$/, '').trim();
+      }
+
+      let parsedResult: any;
+
+      // Attempt to parse the cleaned result
+      try {
+        parsedResult = JSON.parse(cleanResult);
+      } catch (e) {
+        // If direct parsing fails, try to find the JSON structure
+        const jsonMatch = cleanResult.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+        if (jsonMatch) {
+          try {
+            parsedResult = JSON.parse(jsonMatch[0]);
+          } catch (e2) {
+            console.error("Failed to parse extracted JSON:", e2);
+            // If one chunk fails, strictly we might want to continue, but for now throw
+            throw new Error(`Invalid response format from AI in part ${i + 1}`);
+          }
+        } else {
+          throw new Error(`Invalid response format from AI in part ${i + 1}`);
         }
       }
-      throw new Error("Invalid response format from AI");
+
+      if (isArrayMode) {
+        if (Array.isArray(parsedResult)) {
+          allResults.push(...parsedResult);
+        } else if (parsedResult.questions && Array.isArray(parsedResult.questions)) {
+          // Handle case where AI wraps array in object key 'questions'
+          allResults.push(...parsedResult.questions);
+        } else if (parsedResult.cards && Array.isArray(parsedResult.cards)) {
+          allResults.push(...parsedResult.cards);
+        } else {
+          // It returned a single object? Push it if it looks like a card, else warning
+          if (parsedResult.front && parsedResult.back) {
+            allResults.push(parsedResult);
+          }
+        }
+      } else {
+        // For object modes (interactive), we only support single chunk for now, so return immediately
+        return parsedResult;
+      }
+
+    } catch (error: any) {
+      console.error(`AI Generation failed for part ${i + 1}:`, error);
+      throw error;
     }
-  } catch (error: any) {
-    console.error("AI Generation failed:", error);
-    throw error;
   }
+
+  return allResults;
 }

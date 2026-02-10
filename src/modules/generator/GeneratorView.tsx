@@ -23,6 +23,7 @@ export function GeneratorView() {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [generatedPreview, setGeneratedPreview] = useState<any[]>([]);
+    const [batchProgress, setBatchProgress] = useState<{ current: number, total: number } | null>(null);
 
     const handleFileChange = (newFile: File | null) => {
         setError(null);
@@ -66,11 +67,12 @@ export function GeneratorView() {
 
             const response = await generateCompletion({
                 instruction: genInstruction,
-                content: sourceText.slice(0, 15000),
+                content: sourceText,
                 provider: preferredProvider,
                 model,
                 apiKey,
-                mode: genMode as any
+                mode: genMode as any,
+                onProgress: (current, total) => setBatchProgress({ current, total })
             });
 
             if (genMode === 'interactive_exam') {
@@ -159,6 +161,7 @@ export function GeneratorView() {
             setError(err.message || "Failed to generate content.");
         } finally {
             setIsGenerating(false);
+            setBatchProgress(null);
         }
     };
 
@@ -350,6 +353,8 @@ export function GeneratorView() {
                         <span className="font-black text-xs uppercase tracking-[0.2em]">Generation Mode</span>
                     </div>
                     <div className="flex flex-wrap bg-slate-100 dark:bg-slate-950/50 rounded-xl p-1 border border-slate-200 dark:border-white/5 shadow-inner relative z-10 gap-1">
+                        {/* Modes that return a single Object (harder to batch, processed as single chunk for now) */}
+                        {/* const isObjectMode = ['interactive_worksheet', 'interactive_exam'].includes(mode); */}
                         {(['flashcards', 'worksheet', 'exam', 'interactive_worksheet', 'interactive_exam'] as const).map((m) => (
                             <button
                                 key={m}
@@ -378,12 +383,16 @@ export function GeneratorView() {
                         {isGenerating ? (
                             <>
                                 <Loader2 className="animate-spin" />
-                                <span>Generating Magic...</span>
+                                <span>
+                                    {batchProgress
+                                        ? `Generating Part ${batchProgress.current}/${batchProgress.total}...`
+                                        : "Generating Magic..."}
+                                </span>
                             </>
                         ) : (
                             <>
                                 <Sparkles className="group-hover:animate-spin-slow" />
-                                <span>Generate Flashcards</span>
+                                <span>Generate {genMode.replace('_', ' ')}</span>
                             </>
                         )}
                     </button>
