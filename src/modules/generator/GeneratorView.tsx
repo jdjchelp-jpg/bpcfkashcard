@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle, Globe, Image as ImageIcon, Download, FileSpreadsheet, FileJson, FileType } from 'lucide-react';
+import { Upload, FileText, Sparkles, MessageSquare, Loader2, Cpu, AlertCircle, Globe, Image as ImageIcon, Download, FileSpreadsheet, FileType } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flashcard } from '@/components/flashcard/Flashcard';
 import { useStore, StudySet } from '@/context/StoreContext';
