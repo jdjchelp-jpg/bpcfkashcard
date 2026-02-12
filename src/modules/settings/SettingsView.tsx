@@ -31,18 +31,41 @@ export function SettingsView() {
     };
 
     const orModels = [
-        { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B (Video/Text)' },
-        { id: 'arcee-ai/trinity-large-preview:free', name: 'Trinity Large Preview' },
-        { id: 'upstage/solar-pro-3:free', name: 'Solar Pro 3' },
-        { id: 'nvidia/nemotron-3-nano-30b-a3b:free', name: 'Nemotron 3 Nano 30B' },
-        { id: 'arcee-ai/trinity-mini:free', name: 'Trinity Mini' },
+        { id: 'nousresearch/hermes-3-llama-3.1-405b:free', name: 'Hermes 3 Llama 3.1 405B' },
+        { id: 'meta-llama/llama-3.2-3b-instruct:free', name: 'Llama 3.2 3B Instruct' },
+        { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B Instruct' },
+        { id: 'google/gemma-3-27b-it:free', name: 'Gemma 3 27B IT' },
+        { id: 'mistralai/mistral-small-3.1-24b-instruct:free', name: 'Mistral Small 3.1 24B' },
+        { id: 'tngtech/deepseek-r1t-chimera:free', name: 'DeepSeek R1T Chimera' },
+        { id: 'deepseek/deepseek-r1-0528:free', name: 'DeepSeek R1' },
+        { id: 'tngtech/deepseek-r1t2-chimera:free', name: 'DeepSeek R1T2 Chimera' },
+        { id: 'qwen/qwen3-coder:free', name: 'Qwen 3 Coder' },
+        { id: 'z-ai/glm-4.5-air:free', name: 'GLM 4.5 Air' },
+        { id: 'openai/gpt-oss-20b:free', name: 'GPT OSS 20B' },
+        { id: 'nvidia/nemotron-nano-9b-v2:free', name: 'Nemotron Nano 9B' },
         { id: 'qwen/qwen3-next-80b-a3b-instruct:free', name: 'Qwen 3 Next 80B' },
-        { id: 'qwen/qwen3-coder:free', name: 'Qwen 3 Coder' }
+        { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B' },
+        { id: 'tngtech/tng-r1t-chimera:free', name: 'TNG R1T Chimera' },
+        { id: 'arcee-ai/trinity-mini:free', name: 'Trinity Mini' },
+        { id: 'nvidia/nemotron-3-nano-30b-a3b:free', name: 'Nemotron 3 Nano 30B' },
+        { id: 'upstage/solar-pro-3:free', name: 'Solar Pro 3 (Legacy)' },
+        { id: 'arcee-ai/trinity-large-preview:free', name: 'Trinity Large Preview' },
+        { id: 'stepfun/step-3.5-flash:free', name: 'Step 3.5 Flash' }
     ];
 
     const poeModels = [
-        { id: 'grok-4-fast-reasoning', name: 'Grok 4 Fast Reasoning' }
+        { id: 'grok-4-fast-reasoning', name: 'Grok 4 Fast Reasoning' },
+        { id: 'gemini-3-flash', name: 'Gemini 3 Flash' },
+        { id: 'claude-sonnet-4', name: 'Claude Sonnet 4' },
+        { id: 'kimi-k2.5', name: 'Kimi K2.5' }
     ];
+
+    const SOLAR_CUTOFF = new Date('2026-03-02').getTime();
+    const isSolarDiscontinued = Date.now() >= SOLAR_CUTOFF;
+
+    const filteredOrModels = orModels.filter(m =>
+        !(isSolarDiscontinued && m.id === 'upstage/solar-pro-3:free')
+    );
 
     const limitInMB = maxUploadSize / (1024 * 1024);
 
@@ -101,7 +124,7 @@ export function SettingsView() {
                                     onChange={(e) => setOpenRouterModel(e.target.value)}
                                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
                                 >
-                                    {orModels.map(m => (
+                                    {filteredOrModels.map(m => (
                                         <option key={m.id} value={m.id}>{m.name}</option>
                                     ))}
                                 </select>
@@ -147,8 +170,7 @@ export function SettingsView() {
                                 <select
                                     value={poeModel}
                                     onChange={(e) => setPoeModel(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-not-allowed opacity-80"
-                                    disabled
+                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer"
                                 >
                                     {poeModels.map(m => (
                                         <option key={m.id} value={m.id}>{m.name}</option>

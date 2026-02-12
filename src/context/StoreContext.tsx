@@ -169,6 +169,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('preferredProvider', preferredProvider);
         localStorage.setItem('openRouterModel', openRouterModel);
         localStorage.setItem('poeModel', poeModel);
+
+        // Auto-switch discontinued model (March 2, 2026)
+        const SOLAR_CUTOFF = new Date('2026-03-02').getTime();
+        if (Date.now() >= SOLAR_CUTOFF && openRouterModel === 'upstage/solar-pro-3:free') {
+            setOpenRouterModel('meta-llama/llama-3.3-70b-instruct:free');
+        }
     }, [preferredProvider, openRouterModel, poeModel]);
 
     useEffect(() => {

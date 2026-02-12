@@ -1,7 +1,7 @@
 import { AIProvider } from "@/context/StoreContext";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const POE_URL = "https://api.poe.com/v1/chat/completions";
+const POE_URL = "https://corsproxy.io/?url=https://api.poe.com/v1/chat/completions";
 
 export type GenerationMode = 'flashcards' | 'worksheet' | 'exam' | 'interactive_worksheet' | 'interactive_exam';
 
@@ -16,7 +16,31 @@ export interface GenerationParams {
 }
 
 // Helper to chunk content intelligently
-function chunkContent(text: string, maxChunkSize: number = 4000): string[] {
+function chunkContent(text: string, maxChunkSize: number = 4000, forceParts?: number): string[] {
+  if (forceParts && forceParts > 1) {
+    const chunks: string[] = [];
+    const partSize = Math.ceil(text.length / forceParts);
+    for (let i = 0; i < forceParts; i++) {
+      const start = i * partSize;
+      let end = (i + 1) * partSize;
+
+      // Try to find a sentence boundary near the split point
+      if (end < text.length) {
+        const nextPeriod = text.indexOf('.', end);
+        if (nextPeriod !== -1 && nextPeriod - end < 500) {
+          end = nextPeriod + 1;
+        }
+      } else {
+        end = text.length;
+      }
+
+      const chunk = text.slice(start, end).trim();
+      if (chunk) chunks.push(chunk);
+      if (end >= text.length) break;
+    }
+    return chunks;
+  }
+
   if (text.length <= maxChunkSize) return [text];
 
   const chunks: string[] = [];
@@ -33,6 +57,11 @@ function chunkContent(text: string, maxChunkSize: number = 4000): string[] {
   }
   if (currentChunk.trim()) chunks.push(currentChunk.trim());
   return chunks;
+}
+
+function getRequestedCount(instruction: string): number | null {
+  const match = instruction.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : null;
 }
 
 export async function generateCompletion({ instruction, content, provider, model, apiKey, mode = 'flashcards', onProgress }: GenerationParams) {
@@ -124,10 +153,19 @@ Structure:
 
   // Determine how to process
   let contentChunks = [content];
+  let forcedParts = 0;
 
-  // Only chunk if it's an Array mode and content is long (> 2000 chars)
-  if (isArrayMode && content.length > 2000) {
-    contentChunks = chunkContent(content, 2000);
+  if (isArrayMode) {
+    const requestedCount = getRequestedCount(instruction);
+    if (requestedCount !== null) {
+      if (requestedCount >= 1000) forcedParts = 5;
+      else if (requestedCount >= 500) forcedParts = 3;
+      else if (requestedCount > 0) forcedParts = 2;
+    }
+
+    if (forcedParts > 0 || content.length > 2000) {
+      contentChunks = chunkContent(content, 2000, forcedParts);
+    }
   }
 
   const allResults: any[] = [];
