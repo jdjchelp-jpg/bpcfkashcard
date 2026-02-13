@@ -15,6 +15,9 @@ export interface GenerationParams {
   onProgress?: (current: number, total: number) => void;
 }
 
+// Helper to delay execution
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 // Helper to chunk content intelligently
 function chunkContent(text: string, maxChunkSize: number = 4000, forceParts?: number): string[] {
   if (forceParts && forceParts > 1) {
@@ -173,7 +176,7 @@ Structure:
   for (let i = 0; i < contentChunks.length; i++) {
     let chunk = contentChunks[i];
     let attempt = 0;
-    let maxAttempts = 2;
+    let maxAttempts = 4;
     let success = false;
 
     while (attempt < maxAttempts && !success) {
@@ -182,6 +185,13 @@ Structure:
       // Notify progress
       if (onProgress && contentChunks.length > 1) {
         onProgress(i + 1, contentChunks.length);
+      }
+
+      // Exponential backoff: 2s, 4s, 8s
+      if (attempt > 1) {
+        const backoffTime = Math.pow(2, attempt - 1) * 1000;
+        console.log(`Retrying part ${i + 1}, attempt ${attempt} in ${backoffTime}ms...`);
+        await delay(backoffTime);
       }
 
       const currentAttemptPrompt = attempt > 1
@@ -241,7 +251,9 @@ Structure:
         }
       } catch (error: any) {
         console.error(`Attempt ${attempt} failed for chunk ${i + 1}:`, error);
-        if (attempt === maxAttempts) throw error;
+        if (attempt === maxAttempts) {
+          throw new Error(`Failed to generate Part ${i + 1}/${contentChunks.length} after ${maxAttempts} attempts: ${error.message}`);
+        }
       }
     }
   }
